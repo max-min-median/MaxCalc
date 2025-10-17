@@ -293,6 +293,51 @@ def vectorCrossProductFn(L, R):
     tup.tokens = [L.tokens[1] * R.tokens[2] - R.tokens[1] * L.tokens[2], L.tokens[2] * R.tokens[0] - R.tokens[2] * L.tokens[0], L.tokens[0] * R.tokens[1] - R.tokens[0] * L.tokens[1]]
     return tup
 
+def normalPdfFn(L):
+    from tuples import Tuple
+    if isinstance(L, Tuple):
+        if len(L) != 3: raise EvaluationError('Expected normpdf(x) or normpdf(x, mu, sigma)')
+        L = (L.tokens[0] - L.tokens[1]) / (sigma := L.tokens[2])
+    else:
+        sigma = one
+    x_sqr = L * L
+    return exp(-x_sqr / two) / sqrt_2pi / sigma
+
+def normalCdfFn(L):
+    from tuples import Tuple
+    if isinstance(L, Tuple):
+        if len(L) not in (2, 4): raise EvaluationError('Expected normcdf(a, b) or normcdf(a, b, mu, sigma)')
+        elif len(L) == 2:
+            a, b, mu, sigma = *L.tokens, zero, one
+        else:  # len(L) == 4:
+            a, b, mu, sigma = L.tokens
+    else:
+        raise EvaluationError('Expected normcdf(a, b) or normcdf(a, b, mu, sigma)')
+    from math import erf
+    x1, x2 = (a - mu) / sigma, (b - mu) / sigma
+    return RealNumber((erf(x2 / sqrt2) - erf(x1 / sqrt2)) / 2)
+
+
+def invErf(x):  # returns a such that erf(a) = x
+    from math import erf
+    L, R = -4, 4
+    for _ in range(60):
+        M = (L + R) / 2
+        if erf(M) > x: R = M
+        elif erf(M) < x: L = M
+        else: return M
+    return (L + R) / 2
+
+
+def invNormalCdfFn(L):
+    from tuples import Tuple
+    if isinstance(L, Tuple):
+        if len(L) != 3: raise EvaluationError('Expected invnorm(x) or invnorm(x, mu, sigma)')
+        L, mu, sigma = L.tokens
+    else:
+        mu, sigma = zero, one
+    return mu + sigma * sqrt2 * RealNumber(invErf(two * L - one))
+
 
 assignment = Infix(' = ', assignmentFn)
 lambdaArrow = Infix(' => ', lambdaArrowFn)
@@ -376,6 +421,9 @@ exponentiation = Infix('^', exponentiationFn)
 factorial = Postfix('!', factorialFn)
 vectorDotProduct = Infix('.', vectorDotProductFn)
 vectorCrossProduct = Infix('><', vectorCrossProductFn)
+normpdf = PrefixFunction('normpdf', normalPdfFn)
+normcdf = PrefixFunction('normcdf', normalCdfFn)
+invnorm = PrefixFunction('normcdf', invNormalCdfFn)
 
 
 regex = {
@@ -447,6 +495,9 @@ regex = {
     r'(arcsin|asin)(?![A-Za-z_])': arcsin,
     r'(arccos|acos)(?![A-Za-z_])': arccos,
     r'(arctan|atan)(?![A-Za-z_])': arctan,
+    r'(normpdf)(?![A-Za-z_])': normpdf,
+    r'(normcdf)(?![A-Za-z_])': normcdf,
+    r'(invnorm)(?![A-Za-z_])': invnorm,
     r'(sqrt)(?![A-Za-z_])': sqrt,
     r'(ln)(?![A-Za-z_])': ln,
     r'(lg)(?![A-Za-z_])': lg,
@@ -489,6 +540,9 @@ power = {
     arcsin: (11.1, 10.9),
     arccos: (11.1, 10.9),
     arctan: (11.1, 10.9),
+    normpdf: (11.1, 10.9),
+    normcdf: (11.1, 10.9),
+    invnorm: (11.1, 10.9),
     ln: (11.1, 10.9),
     lg: (11.1, 10.9),
     negative: (11.1, 10.9),
@@ -547,7 +601,6 @@ power = {
     # comma_separator: (1, 1),
     None: (0, 0),
 }
-
 
 # a ? b ? c : d : e
 # a + (b=3) + 4^b(c=b+1)a!sinb + 7c

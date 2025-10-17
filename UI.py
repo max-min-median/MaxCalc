@@ -481,7 +481,7 @@ class UI:
             pad = curses.newpad(totalLines + 1, wd)
         else:
             rnge = range(len(text))
-            pad = curses.newpad(ht + 1, wd)
+            pad = curses.newpad(ht + 2, wd)
 
         for i in rnge:
             if pad.getyx()[1] != 0: pad.addstr('\n')
@@ -490,9 +490,11 @@ class UI:
                 promptEnd = tuple(text[i][:len(self.prompt)]) == self.prompt and len(self.prompt)
                 for j, item in enumerate(text[i]):
                     pad.addstr(*(item if j < promptEnd else (item[0], UI.YELLOW_ON_BLUE)))
+                    if pad.getyx()[0] >= ht: break
             else:
                 for item in text[i]:
                     pad.addstr(*item)
+                    if pad.getyx()[0] >= ht: break
 
 
         wy, wx = window.getbegyx()

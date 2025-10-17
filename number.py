@@ -208,6 +208,8 @@ ln1_1 = RealNumber(167314056934657, 1755468904561492, fcf=False)
 ln2 = RealNumber(1554903831458736, 2243252046704767, fcf=False)
 ln10 = RealNumber(227480160645689, 98793378510888, fcf=False)
 half = one / two
+sqrt2 = RealNumber(12477253282759, 8822750406821, fcf=False)
+sqrt_2pi = RealNumber(5017911669018, 2001857124091, fcf=False)
 
 
 class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imaginary part.

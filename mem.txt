@@ -4,9 +4,9 @@ binompdf(n, p, x = -1) = x == -1 ? map(x => binompdf(n, p, x))(range(0, n + 1)) 
 collatz(n) = n > 1 ? 1 + (n % 2 ? collatz(3n + 1) : collatz(n/2)) : 0
 cosAngle(a, b, c) = acos((b^2 + c^2 - a^2) / (2 * b * c))
 cosRule(a, b, angle) = sqrt(a^2 + b^2 - 2 * a * b cos angle)
-grad(x, y) = (yx^2 + 2y)/(x^2 - 4)
+grad(f) = x => {alpha = 0.0000000001; (f(x + alpha) - f(x - alpha)) / 2alpha}
 hero(a, b, c) = {s = (a + b + c) / 2; sqrt(s(s - a)(s - b)(s - c))}
-poisscdf(lambda, a, b) = poisspdf(lambda, a) + ((b > a) && poisscdf(lambda, a + 1, b))
+poisscdf(lambda, a, b = -1) = b == -1 ? poisscdf(lambda, 0, a) : poisspdf(lambda, a) + (b > a ? poisscdf(lambda, a + 1, b) : 0)
 poisspdf(lambda, x) = e^-lambda lambda^x / x!
 polar(x) = (abs(x), arg(x))
 quad(a, b, c) = {sqrtD = sqrt(b^2 - 4ac); ((-b - sqrtD)/2a, (-b + sqrtD)/2a)}
@@ -20,7 +20,7 @@ parseBin(n) = radixToDecHelper(reverse(n), 2, 0)
 radixToDecHelper(n, radix, acc) = n ? radixToDecHelper(n // 10, radix, radix * acc + (n % 10 > 0)) : acc
 bin(n, bits = 32) = binHelper(n + (n < 0) * 2^bits, bits - 1, 0)
 binHelper(n, p, res) = {c = n // 2^p; p ? binHelper(n - c * 2^p, p - 1, 10res + c) : 10res + c}
-proj(u, v) = (u.v / norm(v)^2) v
+proj(u, v) = (u.v) / (v.v) v
 scalarMult(k, (a, b, c, d)) = (ka, kb, kc, kd)
 root(f, a, b, inc = (b - a)/1000, delta = delta, h = f(b)) = f(a) * h < 0 ? rootFind(f, a, b, delta, f(a), h) : a + inc < b ? root(f, a + inc, b, inc, delta) : ()
 rootFind(f, a, b, delta, l = f(a), h = f(b), m = f((a + b)/2)) = b - a <* delta ? (a + b)/2 : m * l <* 0 ? rootFind(f, a, (a + b)/2, delta, l, m) : rootFind(f, (a + b)/2, b, delta, m, h)
@@ -31,9 +31,7 @@ log(a, b) = ln(b)/ln(a)
 cpd(prin, I, t) = prin(1 + I)^t
 gcd(a, b) = a ? gcd(b % a, a) : b
 summation(f, l, u) = l <= u ? f(l) + summation(f, l + 1, u) : 0
-binCoeff(c, n, r, acc = 1) = r ? binCoeff(c, n, r - 1, acc * c * (n - r + 1) / r) : acc
-normpdf(x, mu = 0, sigma = 1) = 1/(sqrt(2pi) * sigma) e^(-1/2 ((x - mu)/sigma)^2)
-normcdf(a, b, mu = 0, sigma = 1) = integrate(normpdf, (a - mu)/sigma, (b - mu)/sigma)
+binCoeff(a, b, n, r = 0) = r > n ? () : (nCr * a^(n - r) * b^r:) <+> binCoeff(a, b, n, r + 1)
 gym(a, b = 0, c = 0, d = 0, q = 0) = (45 + 2(45a + 25b + 10c + 5d + 2.5q)) lbToKg
 sumOfRoots(a, b, c) = {q = quad(a, b, c); q @ 0 + q @ 1}
 map = f => v => v$ ? (f(v @ 0):) <+> map(f)(1 </ v) : ()
@@ -59,7 +57,28 @@ graph(f) = map(x => (x, f(x)))
 helper(ch, i = 0) = {{repeat(n) = helper(ch, i = 0) = i == n ? () : (ch:) <+> helper(ch, i + 1); n = 5}} i == n ? () : (ch:) <+> helper(ch, i + 1)
 avg(v) = sum(v) / v$
 divMod(n, d) = (n // d, n % d)
-f((x, y)) = (x^2, y^2)
-g = 3
-a = 5
-ans = (16, 81)
+sigma(f, l, u) = f(l) + (l < u ? sigma(f, l + 1, u) : 0)
+table = graph(f) = map(x => (x, f(x)))
+angle(x) = polar(x) @ 1
+geopdf(p, x) = (1 - p)^(x - 1) * p
+geocdf(p, a, b = -1) = b == -1 ? geocdf(p, 1, a) : (1 - p)^(a - 1) - (1 - p)^b
+vecGetPointOnPlane((n, d)) = n @ 0 != 0 ? (d/(n @ 0), 0, 0) : n @ 1 != 0 ? (0, d/(n @ 1), 0) : (0, 0, d/(n @ 2))
+vecFOPtoLine(p, (a, d)) = a + proj(p - a, d)
+vecFOPtoPlane(p, (n, d)) = {a = vecGetPointOnPlane((n, d)); p + proj(a - p, n)}
+vecPlane3Points(p, q, r) = {n = (q - p)><(r - p); (n, p.n)}
+vecDistPointToLine(p, (a, d)) = norm((p - a)><d)/norm(d)
+vecDistPointToPlane(p, (n, d)) = abs((vecGetPointOnPlane((n, d)) - p).n)/norm(n)
+vecDistPlaneToPlane((n1, d1), (n2, d2)) = n1><n2 != (0, 0, 0) ? () : vecDistPointToPlane(vecGetPointOnPlane((n1, d1)), (n2, d2))
+hyperGeom = (a, b) => (x, y) => (aCx)(bCy) / ((a + b)C(x + y))
+vecPlaneFromParametric(a, p, q) = {n = p><q; (n, a.n)}
+h(x) = -49/10 (x - 6)^2 + 183
+ans = 1943825649530/4305321141441
+deg = 372357439/21334509725
+toDeg = 134029745180/2339260349
+lbToKg = 200/441
+delta = 1/10000000000
+A = ((1, 1), (1, 0))
+v = ((610:), (377:))
+t = 60
+freq = (1/10, 3/10, 2/5, 1/5)
+vals = (0, 1, 2, 3)
