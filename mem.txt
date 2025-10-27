@@ -13,11 +13,9 @@ quad(a, b, c) = {sqrtD = sqrt(b^2 - 4ac); ((-b - sqrtD)/2a, (-b + sqrtD)/2a)}
 simul(a, b, c, d, e, f) = ((bf - ce)/(bd - ae), (cd - af)/(bd - ae))
 fib(n, a = 1, b = 0) = n == 0 ? b : fib(n - 1, b, a + b)
 luhn(n, q = 1) = {d = n % 10; n ? (q ? d : 2d > 9 ? 2d - 9 : 2d) + luhn(n // 10, 1 - q) : 0}
-reverse(n, acc = 0) = n == 0 ? acc : reverse(n // 10, 10acc + n % 10)
 ceil(n) = n // 1 + (n % 1 > 0)
 floor(n) = n // 1
-parseBin(n) = radixToDecHelper(reverse(n), 2, 0)
-radixToDecHelper(n, radix, acc) = n ? radixToDecHelper(n // 10, radix, radix * acc + (n % 10 > 0)) : acc
+parseBin(n, acc = 0, base = 1) = n ? parseBin(n // 10, acc + base * (n % 10), base * 2) : acc
 bin(n, bits = 32) = binHelper(n + (n < 0) * 2^bits, bits - 1, 0)
 binHelper(n, p, res) = {c = n // 2^p; p ? binHelper(n - c * 2^p, p - 1, 10res + c) : 10res + c}
 proj(u, v) = (u.v) / (v.v) v
@@ -43,7 +41,6 @@ sum = (v, a = 0) => {{f = (x, y) => x + y}} v$ ? reduce(f)(1 </ v, f(a, v @ 0)) 
 fibSequence(n, result = (1, 1)) = result$ >= n ? n /> result : fibSequence(n, result <+> (sum(result </ 2):))
 norm(v) = sqrt(v.v)
 stdDev(v) = sqrt(var(v))
-var(v) = {sumSq = sum(map(x => x^2)(v)); mean = sum(v) / v$; sumSq / v$ - mean^2}
 euler(grad, (x, y), endX, stepSize, thisGrad = grad(x, y), thisRow = ((x, y, thisGrad):)) = x >= endX ? thisRow : thisRow <+> euler(grad, (x + stepSize, y + thisGrad * stepSize), endX, stepSize)
 vecAngle(u, v) = acos(u.v / norm(u)norm(v))
 unitVec(v) = v/norm(v)
@@ -55,7 +52,6 @@ grid = n => ch => repeat(n)(repeat(n)(ch))
 rej(u, v) = v - proj(u, v)
 graph(f) = map(x => (x, f(x)))
 helper(ch, i = 0) = {{repeat(n) = helper(ch, i = 0) = i == n ? () : (ch:) <+> helper(ch, i + 1); n = 5}} i == n ? () : (ch:) <+> helper(ch, i + 1)
-avg(v) = sum(v) / v$
 divMod(n, d) = (n // d, n % d)
 sigma(f, l, u) = f(l) + (l < u ? sigma(f, l + 1, u) : 0)
 table = graph(f) = map(x => (x, f(x)))
@@ -71,14 +67,18 @@ vecDistPointToPlane(p, (n, d)) = abs((vecGetPointOnPlane((n, d)) - p).n)/norm(n)
 vecDistPlaneToPlane((n1, d1), (n2, d2)) = n1><n2 != (0, 0, 0) ? () : vecDistPointToPlane(vecGetPointOnPlane((n1, d1)), (n2, d2))
 hyperGeom = (a, b) => (x, y) => (aCx)(bCy) / ((a + b)C(x + y))
 vecPlaneFromParametric(a, p, q) = {n = p><q; (n, a.n)}
-h(x) = -49/10 (x - 6)^2 + 183
-ans = 1943825649530/4305321141441
-deg = 372357439/21334509725
-toDeg = 134029745180/2339260349
+sumAP(a, d, n) = n/2 (2a + (n - 1)d)
+radixToDec(radix) = h(n, acc = 0, base = 1) = n ? h(n // 10, acc + base * (n % 10), base * radix) : acc
+f(x) = 36(cosx * (1 + cosx) + sinx (-sinx))
+f_inv(x) = (x - 1)/2
+T(n) = 95.676n + n(n - 1)/2 * 0.049396
+average(vals, freqs) = vals.freqs / sum(freqs)
+meanAndVar(vals, freqs = (-1:)) = {freqs == (-1:) ? freqs = map(x => 1)(vals) : (); a = vals.freqs; b = map(x => x^2)(vals).freqs; n = sum(freqs); (m = a/n, b/n - m^2)}
+ans = 21434/539827
+deg = 367659/21065309
+toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-A = ((1, 1), (1, 0))
-v = ((610:), (377:))
-t = 60
-freq = (1/10, 3/10, 2/5, 1/5)
-vals = (0, 1, 2, 3)
+x1 = -190174216/52212749
+x2 = 38139656/42743343
+x = 8459361/18819920

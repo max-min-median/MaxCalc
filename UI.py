@@ -49,7 +49,10 @@ class UI:
             402: {"key": curses.KEY_RIGHT, "modifiers": {"shift"}},
             555: {"key": curses.KEY_LEFT, "modifiers": {"ctrl", "shift"}},
             570: {"key": curses.KEY_RIGHT, "modifiers": {"ctrl", "shift"}},
-        }
+        },
+
+        "Darwin":
+        {},
     }
 
 

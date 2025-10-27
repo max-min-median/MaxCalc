@@ -46,6 +46,9 @@ class Memory:
         'sqrt': op.sqrt,
         'ln': op.ln,
         'lg': op.lg,
+        'normcdf': op.normcdf,
+        'normpdf': op.normpdf,
+        'invnorm': op.invnorm,
     }
 
     def __init__(self, filename=None):
