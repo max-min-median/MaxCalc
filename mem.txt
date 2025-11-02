@@ -69,16 +69,17 @@ hyperGeom = (a, b) => (x, y) => (aCx)(bCy) / ((a + b)C(x + y))
 vecPlaneFromParametric(a, p, q) = {n = p><q; (n, a.n)}
 sumAP(a, d, n) = n/2 (2a + (n - 1)d)
 radixToDec(radix) = h(n, acc = 0, base = 1) = n ? h(n // 10, acc + base * (n % 10), base * radix) : acc
-f(x) = 36(cosx * (1 + cosx) + sinx (-sinx))
-f_inv(x) = (x - 1)/2
-T(n) = 95.676n + n(n - 1)/2 * 0.049396
-average(vals, freqs) = vals.freqs / sum(freqs)
 meanAndVar(vals, freqs = (-1:)) = {freqs == (-1:) ? freqs = map(x => 1)(vals) : (); a = vals.freqs; b = map(x => x^2)(vals).freqs; n = sum(freqs); (m = a/n, b/n - m^2)}
-ans = 21434/539827
+f = t => 30t + 10t^2 - 10t^3/3
+g(x) = (x - 5)/2
+f_inv(x) = (x - 5)/2
+confidenceInterval(alpha, mean, sd) = {z = normcdf((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
+cartesianProduct(arr1, arr2, i = 0, j = 0) = i >= arr1$ ? [] : j >= arr2$ ? cartesianProduct(arr1, arr2, i + 1, 0) : ((arr1 @ i, arr2 @ j):) <+> cartesianProduct(arr1, arr2, i, j + 1)
+u(n) = n == 1 ? 500 : 0.32 u(n - 1) + 500
+v(n) = 12500/17 (1 - 0.32^n)
+ans = sumGP(a, r, n) = a(r^n - 1) / (r - 1)
+sumGP(a, r, n) = a(r^n - 1) / (r - 1)
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-x1 = -190174216/52212749
-x2 = 38139656/42743343
-x = 8459361/18819920

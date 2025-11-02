@@ -40,7 +40,7 @@ class UI:
             384: {"key": curses.KEY_END, "modifiers": {"shift"}},
            1001: {"key": curses.KEY_LEFT, "modifiers": {"ctrl", "shift"}},
         },
-    
+
         "Linux":
         {
             554: {"key": curses.KEY_LEFT, "modifiers": {"ctrl"}},
@@ -493,11 +493,13 @@ class UI:
                 promptEnd = tuple(text[i][:len(self.prompt)]) == self.prompt and len(self.prompt)
                 for j, item in enumerate(text[i]):
                     pad.addstr(*(item if j < promptEnd else (item[0], UI.YELLOW_ON_BLUE)))
-                    if pad.getyx()[0] >= ht: break
+                    # if pad.getyx()[0] >= ht: break
+                    if pad.getyx()[0] >= totalLines: break
             else:
                 for item in text[i]:
                     pad.addstr(*item)
-                    if pad.getyx()[0] >= ht: break
+                    # if pad.getyx()[0] >= ht: break
+                    if pad.getyx()[0] >= (totalLines if windowName == "display" else ht): break
 
 
         wy, wx = window.getbegyx()
