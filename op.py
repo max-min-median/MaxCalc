@@ -234,7 +234,7 @@ def tupConcatFn(tup1, tup2):
     return result
 
 def knifeFn(dir):
-    def check(L, R):
+    def check(L, R):  # ensures that L is the index and R is the tuple.
         from tuples import Tuple
         if not isinstance(L, RealNumber) or not isinstance(R, Tuple): return False
         if not L.isInt(): raise EvaluationError("Knife operator expects an integer operand")
