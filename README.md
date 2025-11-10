@@ -5,10 +5,14 @@ This calculator started as an idea for a project for [REDACTED: name of a partic
 
 ## Installation
 1. Clone the repository.
-2. Run calculator.py
-```
-python calculator.py
-```
+2. Install windows dependancies
+   ```
+   pip install -r requirements.txt
+   ```
+3. Run `calculator.py`
+   ```
+   python calculator.py
+   ```
 -----------
 
 ## Commands
