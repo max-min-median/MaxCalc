@@ -73,17 +73,18 @@ meanAndVar(vals, freqs = (-1:)) = {freqs == (-1:) ? freqs = map(x => 1)(vals) : 
 confidenceInterval(alpha, mean, sd) = {z = normcdf((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
 cartesianProduct(arr1, arr2, i = 0, j = 0) = i >= arr1$ ? [] : j >= arr2$ ? cartesianProduct(arr1, arr2, i + 1, 0) : ((arr1 @ i, arr2 @ j):) <+> cartesianProduct(arr1, arr2, i, j + 1)
 sumGP(a, r, n) = a(r^n - 1) / (r - 1)
-f(x) = -sqrt(-1 - x)
-g(x) = x^2
 LAS(d, curr = -1, ct = -1) = curr == -1 ? LAS(1 </ d, d @ 0, 1) : d$ ? d @ 0 == curr ? LAS(1 </ d, curr, ct + 1) : [ct, curr] <+> LAS(1 </ d, d @ 0, 1) : [ct, curr]
 digits(n) = n < 10 ? [n:] : digits(n // 10) <+> [n % 10:]
 digitsToNum(lst) = lst$ ? 10 * digitsToNum(lst /> 1) + (lst @ (lst$ - 1)) : 0
 lookAndSay(n, acc = (1:)) = acc$ >= n ? acc : lookAndSay(n, acc <+> (digitsToNum(LAS(digits(acc @ (acc$ - 1)))):))
-ans = 199542031/121312941
+nQ_fits(k, arr, i = 0) = i == arr$ ? 1 : arr @ i == k || abs(arr @ i - k) == abs(arr$ - i) ? 0 : nQ_fits(k, arr, i + 1)
+nQueens(n, curr = (), i = 0, acc = []) = i == n ? acc : curr$ == n ? acc <+> [curr:] : nQ_fits(i, curr) ? nQueens(n, curr <+> (i:), 0, acc) <+> nQueens(n, curr, i + 1, acc) : nQueens(n, curr, i + 1, acc)
+S(n) = n(2^(n + 1))
+ans = 20480
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-n = 7
-x = -5/3
-lst = [3, 5]
+x = 4
+y = 3
+z = 1

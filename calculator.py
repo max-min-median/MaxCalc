@@ -35,8 +35,8 @@ def main():
                 inp = ui.getInput(trie=trie) # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
                 # check for commands
                 if m := re.match(r'^\s*help\s*$', inp):
-                    import help
-                    help.display()
+                    import help_page
+                    help_page.display()
                 elif m := re.match(r'^\s*vars\s*$', inp):
                     if len(ui.text["display"]) > 0: ui.addText("display")
                     ui.addText("display", ("User-defined Variables", UI.LIGHTBLUE_ON_BLACK))
@@ -113,6 +113,7 @@ def main():
             ui.saveHistory()
     finally:
         ui.end()
+
 
 if __name__ == '__main__':
     sys.setrecursionlimit(500000)
