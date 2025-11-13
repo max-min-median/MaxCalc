@@ -22,5 +22,3 @@ class ParseError(CalculatorError):
 class SettingsError(CalculatorError):
     def __init__(self, errorMsg='Settings error!', *args):
         super().__init__(errorMsg, *args)
-
-pass

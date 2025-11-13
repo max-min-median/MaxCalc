@@ -8,7 +8,7 @@ def main(stdscr):
     try:
         for i in range(0, 255):
             stdscr.addstr(str(i), curses.color_pair(i))
-    except curses.ERR:
+    except curses.error:
         # End of screen reached
         pass
     stdscr.getch()
