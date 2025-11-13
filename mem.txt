@@ -80,11 +80,8 @@ lookAndSay(n, acc = (1:)) = acc$ >= n ? acc : lookAndSay(n, acc <+> (digitsToNum
 nQ_fits(k, arr, i = 0) = i == arr$ ? 1 : arr @ i == k || abs(arr @ i - k) == abs(arr$ - i) ? 0 : nQ_fits(k, arr, i + 1)
 nQueens(n, curr = (), i = 0, acc = []) = i == n ? acc : curr$ == n ? acc <+> [curr:] : nQ_fits(i, curr) ? nQueens(n, curr <+> (i:), 0, acc) <+> nQueens(n, curr, i + 1, acc) : nQueens(n, curr, i + 1, acc)
 S(n) = n(2^(n + 1))
-ans = 20480
+ans = 55
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-x = 4
-y = 3
-z = 1
