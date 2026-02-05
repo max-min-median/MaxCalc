@@ -423,7 +423,7 @@ vectorDotProduct = Infix('.', vectorDotProductFn)
 vectorCrossProduct = Infix('><', vectorCrossProductFn)
 normpdf = PrefixFunction('normpdf', normalPdfFn)
 normcdf = PrefixFunction('normcdf', normalCdfFn)
-invnorm = PrefixFunction('normcdf', invNormalCdfFn)
+invnorm = PrefixFunction('invnorm', invNormalCdfFn)
 
 
 regex = {

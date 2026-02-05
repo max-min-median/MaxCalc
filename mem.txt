@@ -47,7 +47,7 @@ unitVec(v) = v/norm(v)
 range(a, b = 9.87E99, step = sgn(b - a)) = {b == 9.87E99 && ((a, b) = (0, a)); h(x, y, st, res = ()) = sgn(y - x) == sgn(st) ? h(x + st, y, st, res <+> (x:)) : res; h(a, b, step)}
 collatzSeq = n => map(collatz)(range(1, n + 1))
 compose = g => f => x => f(g(x))
-repeat(n) = helper(ch, i = 0) = i == n ? () : (ch:) <+> helper(ch, i + 1)
+repeat(ch, n) = n == 0 ? () : (ch:) <+> repeat(ch, n - 1)
 grid = n => ch => repeat(n)(repeat(n)(ch))
 rej(u, v) = v - proj(u, v)
 graph(f) = map(x => (x, f(x)))
@@ -70,7 +70,6 @@ vecPlaneFromParametric(a, p, q) = {n = p><q; (n, a.n)}
 sumAP(a, d, n) = n/2 (2a + (n - 1)d)
 radixToDec(radix) = h(n, acc = 0, base = 1) = n ? h(n // 10, acc + base * (n % 10), base * radix) : acc
 meanAndVar(vals, freqs = (-1:)) = {freqs == (-1:) ? freqs = map(x => 1)(vals) : (); a = vals.freqs; b = map(x => x^2)(vals).freqs; n = sum(freqs); (m = a/n, b/n - m^2)}
-confidenceInterval(alpha, mean, sd) = {z = normcdf((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
 cartesianProduct(arr1, arr2, i = 0, j = 0) = i >= arr1$ ? [] : j >= arr2$ ? cartesianProduct(arr1, arr2, i + 1, 0) : ((arr1 @ i, arr2 @ j):) <+> cartesianProduct(arr1, arr2, i, j + 1)
 sumGP(a, r, n) = a(r^n - 1) / (r - 1)
 LAS(d, curr = -1, ct = -1) = curr == -1 ? LAS(1 </ d, d @ 0, 1) : d$ ? d @ 0 == curr ? LAS(1 </ d, curr, ct + 1) : [ct, curr] <+> LAS(1 </ d, d @ 0, 1) : [ct, curr]
@@ -78,10 +77,42 @@ digits(n) = n < 10 ? [n:] : digits(n // 10) <+> [n % 10:]
 digitsToNum(lst) = lst$ ? 10 * digitsToNum(lst /> 1) + (lst @ (lst$ - 1)) : 0
 lookAndSay(n, acc = (1:)) = acc$ >= n ? acc : lookAndSay(n, acc <+> (digitsToNum(LAS(digits(acc @ (acc$ - 1)))):))
 nQ_fits(k, arr, i = 0) = i == arr$ ? 1 : arr @ i == k || abs(arr @ i - k) == abs(arr$ - i) ? 0 : nQ_fits(k, arr, i + 1)
-nQueens(n, curr = (), i = 0, acc = []) = i == n ? acc : curr$ == n ? acc <+> [curr:] : nQ_fits(i, curr) ? nQueens(n, curr <+> (i:), 0, acc) <+> nQueens(n, curr, i + 1, acc) : nQueens(n, curr, i + 1, acc)
-S(n) = n(2^(n + 1))
-ans = 55
+nQueens(n) = map(map(nQ_makerow(n)))(nQ_raw(n))
+u(n) = 61 + 6(n - 1)
+confidenceInterval(alpha, mean, sd) = {z = invnorm((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
+confidenceInterval_proportion(alpha, p, n) = confidenceInterval(alpha, p, sqrt(p(1 - p)/n))
+unpairedTStat((x1, n1, s1), (x2, n2, s2)) = {sp = ((n1 - 1)s1^2 + (n2 - 1)s2^2)/(n1 + n2 - 2); (x1 - x2) / (sqrt(sp * (1/n1 + 1/n2)))}
+unpairedTStat_withSP2((x1, n1, s1), (x2, n2, s2)) = {sp = ((n1 - 1)s1^2 + (n2 - 1)s2^2)/(n1 + n2 - 2); (sp, (x1 - x2) / (sqrt(sp * (1/n1 + 1/n2))))}
+nQ_makerow(n) = h(i) = repeat(0, i) <+> (1:) <+> repeat(0, n - i - 1)
+nQ_raw(n, curr = (), i = 0, acc = []) = i == n ? acc : curr$ == n ? acc <+> [curr:] : nQ_fits(i, curr) ? nQ_raw(n, curr <+> (i:), 0, acc) <+> nQ_raw(n, curr, i + 1, acc) : nQ_raw(n, curr, i + 1, acc)
+mod(a, n) = a % n
+feetInchToCm(f, in = 0) = 2.54(12f + in)
+cmToFeetInch(x) = {inches = x/2.54; divMod(inches, 12)}
+createCubic(a, b, c) = (1, -(a + b + c), a * b + b * c + c * a, -a * b * c)
+S(n) = 17/10 n - 1/10 n^2
+lcm(a, b) = a * b / gcd(a, b)
+hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
+gcd3(a, b, c) = gcd(a, gcd(b, c))
+lcm3(a, b, c) = lcm(a, lcm(b, c))
+hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
+f() = 5
+ans = (6i, -10, 8i)
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
+x = 4
+k = 5706674932067741/1816491048114374
+A = 49/10
+B = -2
+t = 0
+a = 2
+b = 3
+p1 = 17976473982901831/1430522346870839
+p2 = 35952947965803662/1430522346870839
+y = -1
+r = 3
+n = 18
+z = -1
+w = 2i
+old = (2 + 3i, 2 - 3i, 1/3)

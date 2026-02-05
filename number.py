@@ -270,6 +270,7 @@ class ComplexNumber(Number):  # Must be non-real valued, i.e. must have an imagi
     def __mul__(self, other):
         if other == zero: return zero
         if isinstance(other, RealNumber): return ComplexNumber(self.real * other, self.im * other)
+        if not isinstance(other, ComplexNumber): return NotImplemented
         return ComplexNumber(self.real * other.real - self.im * other.im, self.real * other.im + self.im * other.real)
 
     def __rmul__(self, other):

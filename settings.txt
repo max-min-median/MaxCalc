@@ -1,1 +1,1 @@
-{"frac_max_length": 10, "debug": false, "working_precision": 25, "final_precision": 15, "keyboard": true, "quick_exponents": true}
+{"frac_max_length": 10, "debug": false, "working_precision": 30, "final_precision": 25, "keyboard": true, "quick_exponents": true}
