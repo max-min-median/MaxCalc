@@ -34,7 +34,9 @@ def parse(s, offset=0, brackets='', parent=None):
     # print(f"Parsing '{s}', brackets: {brackets}, parent: {parent}")
     while ss := s[i:]:
         if (ch := ss[0]) == ',' or ch in ')]}' or (ch := ss[:2]) in [f'{ONE_TUPLE_INDICATOR}{ch}' for ch in ')]}']:  # last item in expression / tuple
-            if parent is None: raise ParseError(f"Unexpected {"comma separator ','" if ch == ',' else f"delimiter '{ch}'"} outside a tuple. Please enclose tuples in parentheses '()'.", (offset, offset + 1))
+            if parent is None: raise ParseError(f"Unexpected {"comma separator ','" if ch == ',' else f"delimiter '{ch}'"} outside a tuple. Please enclose tuples in parentheses '()'.", (offset + i, offset + i + 1))
+            elif ch != ',' and ch[-1] != parent.brackets[-1]:
+                raise ParseError(f"Unexpected delimiter '{ch}'; should be '{(ONE_TUPLE_INDICATOR if len(ch) == 2 else '') + parent.brackets[-1]}' instead", (offset + i, offset + i + len(ch)))
             expr.inputStr = expr.inputStr[:i]
             validate(expr)
             return expr

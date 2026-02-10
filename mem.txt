@@ -89,30 +89,21 @@ mod(a, n) = a % n
 feetInchToCm(f, in = 0) = 2.54(12f + in)
 cmToFeetInch(x) = {inches = x/2.54; divMod(inches, 12)}
 createCubic(a, b, c) = (1, -(a + b + c), a * b + b * c + c * a, -a * b * c)
-S(n) = 17/10 n - 1/10 n^2
+S(n) = 7/4 - 3/2(n + 1) - 1/2(n + 2)
 lcm(a, b) = a * b / gcd(a, b)
 hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
 gcd3(a, b, c) = gcd(a, gcd(b, c))
 lcm3(a, b, c) = lcm(a, lcm(b, c))
 hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
-f() = 5
-ans = (6i, -10, 8i)
+f(z) = z^3 - 2z^2 + (-2 + 3i)z + (1 + 3i)
+polyMult(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> polyMult(1 </ a, b)))
+polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1))
+ans = -6
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-x = 4
-k = 5706674932067741/1816491048114374
-A = 49/10
-B = -2
-t = 0
-a = 2
-b = 3
-p1 = 17976473982901831/1430522346870839
-p2 = 35952947965803662/1430522346870839
-y = -1
-r = 3
-n = 18
-z = -1
-w = 2i
-old = (2 + 3i, 2 - 3i, 1/3)
+a = (1, 2, 3)
+b = (4, 5, 6, 7)
+z = -2 + i
+w = 1 + i
