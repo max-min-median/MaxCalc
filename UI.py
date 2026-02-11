@@ -5,7 +5,7 @@ import subprocess
 from trie import Trie
 from functions import Function
 from operators import Operator
-from collections import deque
+from collections import deque, defaultdict
 import json
 
 system = platform.system()
@@ -55,8 +55,13 @@ class UI:
         {},
     }
 
-
+    fgColors = defaultdict(dict)
     pairIdx = None
+
+    @classmethod
+    def __class_getitem__(cls, fgColor):
+        return cls.fgColors[fgColor]
+
     @staticmethod
     def makeColorPair(fg, bg):
         UI.pairIdx += 1
@@ -101,34 +106,33 @@ class UI:
         if UI.pairIdx is None:
             UI.pairIdx = 0
             UI.pairCodeToIdx = {}
-            UI.YELLOW_ON_BLACK = UI.makeColorPair(226, -1)
-            UI.GREY_ON_BLACK = UI.makeColorPair(241, -1)
-            UI.GREEN_ON_BLACK = UI.makeColorPair(10, -1)
-            UI.LIGHTBLUE_ON_BLACK = UI.makeColorPair(69, -1)
-            UI.BRIGHT_PURPLE_ON_BLACK = UI.makeColorPair(201, -1)
-            UI.DARK_PURPLE_ON_BLACK = UI.makeColorPair(129, -1)
-            UI.BRIGHT_ORANGE_ON_BLACK = UI.makeColorPair(202, -1)
-            UI.DIM_ORANGE_ON_BLACK = UI.makeColorPair(208, -1)
-            UI.BRIGHT_GREEN_ON_BLACK = UI.makeColorPair(46, -1)
-            UI.BRIGHT_RED_ON_BLACK = UI.makeColorPair(196, -1)
-            UI.WHITE_ON_BLUE = UI.makeColorPair(-1, 21)
-            UI.YELLOW_ON_BLUE = UI.makeColorPair(226, 21)
-            UI.GREY_ON_BLUE = UI.makeColorPair(241, 21)
-            UI.BRIGHT_WHITE_ON_BLACK = UI.makeColorPair(15, -1)
+            # TODO - revamp colors: UI.colors[]
+            UI["test"]["me"] = 'hello'
+            fgs = {"YELLOW": 226, "GREY": 241, "GREEN": 10, "LIGHTBLUE": 69, "DARK_PURPLE": 129, "BRIGHT_ORANGE": 202, "DIM_ORANGE": 208,
+                   "BRIGHT_GREEN": 46, "BRIGHT_RED": 196, "WHITE": -1, "BRIGHT_WHITE": 15, "BRIGHT_PINK": 165, "BRIGHT_PURPLE": 201, "BRIGHT_CYAN": 11}
+            bgs = {"BLACK": -1, "BLUE": 21}
+            for fg, fg_num in fgs.items():
+                for bg, bg_num in bgs.items():
+                    UI[fg][bg] = UI.makeColorPair(fg_num, bg_num)
+
+            UI["BLACK"]["BRIGHT_GREEN"] = UI.makeColorPair(0, 10)  # for highlighted bracket pairs
+
+            UI.bracketColors = ["BRIGHT_GREEN", "YELLOW", "BRIGHT_CYAN", "BRIGHT_PINK"]
+
             # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
             UI.pairIdxToCode = {v: k for k, v in UI.pairCodeToIdx.items()}
 
         # self.mem = memory
         self.statusDuration = 0
         # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
-        self.prompt = (("♦", UI.BRIGHT_ORANGE_ON_BLACK), (">", UI.DIM_ORANGE_ON_BLACK), (" ", ))
+        self.prompt = (("♦", UI["BRIGHT_ORANGE"]["BLACK"]), (">", UI["DIM_ORANGE"]["BLACK"]), (" ", ))
         self.text = {"display": [], "status": [[]], "input": []}
         self.loadHistory()
         self.selectionAnchor = None
         self.pos = 0
         self.setupWindows()
         if "status" in self.subwins:
-            self.addText("status", ("Hello :) Type 'help' for a quick guide!", UI.GREEN_ON_BLACK))
+            self.addText("status", ("Hello :) Type 'help' for a quick guide!", UI["GREEN"]["BLACK"]))
             self.redraw("status")
             self.doupdate()
 
@@ -153,7 +157,7 @@ class UI:
             elif subprocess.run(["which", "xsel"], capture_output=True).returncode == 0:
                 subprocess.run(["xsel", "--clipboard"], input=s.encode("utf-8"), check=True)
             else:
-                self.text["status"] = [[("No clipboard utility found. Install xclip or xsel."[:self.stdscr.getmaxyx()[1] - 3], UI.BRIGHT_RED_ON_BLACK)]]
+                self.text["status"] = [[("No clipboard utility found. Install xclip or xsel."[:self.stdscr.getmaxyx()[1] - 3], UI["BRIGHT_RED"]["BLACK"])]]
                 self.statusDuration = 1
                 self.redraw("status")
                 self.subwins["status"].refresh()
@@ -180,7 +184,7 @@ class UI:
         if prevWd != self.wd:
             self.displayLineLength = deque((sum(len(x[0]) for x in line) for line in self.text["display"]), DISPLAY_LINE_LIMIT)
 
-        self.stdscr.addstr(0, (self.wd - len(calcSplash)) // 2, calcSplash, UI.LIGHTBLUE_ON_BLACK)
+        self.stdscr.addstr(0, (self.wd - len(calcSplash)) // 2, calcSplash, UI["LIGHTBLUE"]["BLACK"])
         self.borderWins["display"] = self.stdscr.subwin(self.ht * 3 // 4, self.wd, 1, 0)  # rows, cols, startrow, startcol
         self.borderWins["input"] = self.stdscr.subwin(self.ht - self.ht * 3 // 4 - 2, self.wd, self.ht * 3 // 4 + 2, 0)
         self.drawBorders()
@@ -416,7 +420,7 @@ class UI:
                     # update text of status/autocomplete bar
                     spaces = ''
                     for word in nearestWords:
-                        self.addText("status", (spaces, ), (word[:len(self.currWord)], UI.GREEN_ON_BLACK), (word[len(self.currWord):], UI.GREY_ON_BLACK), startNewLine=False)
+                        self.addText("status", (spaces, ), (word[:len(self.currWord)], UI["GREEN"]["BLACK"]), (word[len(self.currWord):], UI["GREY"]["BLACK"]), startNewLine=False)
                         spaces = '   '
                 else:
                     nearestWords = []
@@ -427,6 +431,46 @@ class UI:
             self.drawInput(text, tabbed, nearestWords)
 
 
+    def pairBrackets(self, text):
+        from itertools import cycle
+        iterColors = cycle(UI.bracketColors)
+        allBrackets = [*filter(lambda tup: tup[1] in '()[]{}', enumerate(text))]
+        bracketsSoFar = {'(': 0, '[': 0, '{': 0}
+        pairs = {}
+        stack, takebackColors = [], []
+        result = {idx: None for idx, _ in allBrackets}
+        for idx, bracket in allBrackets:
+            if bracket in '([{':
+                stack.append((bracket, idx, takebackColors.pop() if takebackColors else next(iterColors)))
+                bracketsSoFar[bracket] += 1
+            else:
+                opener = {')': '(', ']': '[', '}': '{'}[bracket]
+                if bracketsSoFar[opener] > 0:
+                    while True:
+                        (br, i2, col2) = stack.pop()
+                        bracketsSoFar[br] -= 1
+                        if br == opener:
+                            result[idx] = result[i2] = col2
+                            pairs[idx], pairs[i2] = i2, idx
+                            takebackColors.append(col2)
+                            break
+                        else:
+                            result[i2] = "BRIGHT_RED"
+                else:
+                    result[idx] = "BRIGHT_RED"
+
+        # mark leftover brackets red
+        for _, idx, _ in stack:
+            result[idx] = "BRIGHT_RED"
+
+        # highlight pairs of brackets under cursor.
+        # if right and left of cursor both have valid pairs, prioritize the right pair.
+        pairIdx = self.pos if self.pos in pairs else self.pos - 1 if self.pos - 1 in pairs else None
+        highlight = (None, None) if pairIdx is None else (pairIdx, pairs[pairIdx])
+
+        return result, highlight
+
+
     def drawInput(self, text, tabbed=False, nearestWords=[]):
         # redraws the input window and relocates the cursor
         if not self.subwins: return
@@ -435,25 +479,27 @@ class UI:
         self.text["input"].clear()
         self.addText("input", *self.prompt)
 
-        # 1. print left part
-        self.addText("input", (''.join(text[:min(self.wordL, selectL)]), ), startNewLine=False)
-        # 2. print from left end of selection to left end of autocomplete
-        self.addText("input", (''.join(text[selectL:min(self.wordL, selectR)]), UI.WHITE_ON_BLUE), startNewLine=False)
-        # 3. print from left end of autocomplete to left end of selection
-        self.addText("input", (''.join(text[self.wordL:min(selectL, self.wordR)]), UI.YELLOW_ON_BLACK), startNewLine=False)
-        # 4. print overlap of selection and autocomplete
-        self.addText("input", (''.join(text[max(selectL, self.wordL):min(selectR, self.wordR)]), UI.YELLOW_ON_BLUE), startNewLine=False)
-        # 5. print from right end of selection to right end of autocomplete
-        self.addText("input", (''.join(text[max(selectL, selectR):self.wordR]), UI.YELLOW_ON_BLACK), startNewLine=False)
+        # TODO - call pairBrackets, print brackets paired.
+        bracketColors, highlight = self.pairBrackets(text)
 
-        if nearestWords:
-            if tabbed is False: self.addText("input", (nearestWords[0][len(self.currWord):], UI.GREY_ON_BLUE if selectL <= self.wordR < selectR else UI.GREY_ON_BLACK), startNewLine=False)
-            else: self.addText("input", (nearestWords[tabbed][len(self.currWord):], UI.YELLOW_ON_BLACK), startNewLine=False)
+        for i, ch in enumerate(text + [""]):
 
-        # 6. print from right end of autocomplete to right end of selection
-        self.addText("input", (''.join(text[max(self.wordR, self.wordL):selectR]), UI.WHITE_ON_BLUE), startNewLine=False)
-        # 7. print right part
-        self.addText("input", (''.join(text[max(self.wordR, selectR, min(self.wordL, selectL)):]), ), startNewLine=False)
+            if i in highlight:
+                fg, bg = "BLACK", "BRIGHT_GREEN"
+            else:
+                fg = (
+                        bracketColors[i] if i in bracketColors else
+                        "YELLOW"         if self.wordL <= i < self.wordR else
+                        "WHITE"
+                )
+
+                bg = "BLUE" if selectL <= i < selectR else "BLACK"
+            
+            if i == self.wordR and nearestWords:
+                if tabbed is False: self.addText("input", (nearestWords[0][len(self.currWord):], UI["GREY"]["BLUE"] if selectL <= self.wordR < selectR else UI["GREY"]["BLACK"]), startNewLine=False)
+                else: self.addText("input", (nearestWords[tabbed][len(self.currWord):], UI["YELLOW"]["BLACK"]), startNewLine=False)
+            
+            self.addText("input", (ch, UI[fg][bg]), startNewLine=False)
 
         self.subwins["input"].move(*divmod(len(self.prompt) + (self.pos if tabbed is False else self.wordL + len(nearestWords[tabbed])), self.wd - 2))
         self.subwins["input"].cursyncup()
@@ -492,7 +538,7 @@ class UI:
             if windowName == "display" and i == self.displaySelection:
                 promptEnd = tuple(text[i][:len(self.prompt)]) == self.prompt and len(self.prompt)
                 for j, item in enumerate(text[i]):
-                    pad.addstr(*(item if j < promptEnd else (item[0], UI.YELLOW_ON_BLUE)))
+                    pad.addstr(*(item if j < promptEnd else (item[0], UI["YELLOW"]["BLUE"])))
                     # if pad.getyx()[0] >= ht: break
                     if pad.getyx()[0] >= totalLines: break
             else:
@@ -523,10 +569,10 @@ class UI:
     def drawBorder(self, windowName):
         win = self.borderWins[windowName]
         if self.activeWin == windowName:
-            win.attron(UI.BRIGHT_WHITE_ON_BLACK)
+            win.attron(UI["BRIGHT_WHITE"]["BLACK"])
             win.border(*((0, ) * 4 + (curses.ACS_LANTERN, ) * 4))
         else:
-            win.attron(UI.GREY_ON_BLACK)
+            win.attron(UI["GREY"]["BLACK"])
             win.box()
         win.noutrefresh()
 
@@ -546,7 +592,7 @@ class UI:
     def moveDisplaySelection(self, dir):
         def selectionIsValid(i):
             line = self.text["display"][i]
-            return line != [] and not any(len(t) == 2 and t[1] == UI.BRIGHT_RED_ON_BLACK for t in line)
+            return line != [] and not any(len(t) == 2 and t[1] == UI["BRIGHT_RED"]["BLACK"] for t in line)
 
         last = len(self.text["display"]) - 1
         curr = last if self.displaySelection is None else self.displaySelection + dir

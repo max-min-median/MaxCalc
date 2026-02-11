@@ -95,10 +95,10 @@ hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
 gcd3(a, b, c) = gcd(a, gcd(b, c))
 lcm3(a, b, c) = lcm(a, lcm(b, c))
 hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
-f(z) = z^3 - 2z^2 + (-2 + 3i)z + (1 + 3i)
+f(x) = 3x + 5/x^2
 polyMult(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> polyMult(1 </ a, b)))
 polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1))
-ans = -6
+ans = luhn(n, q = 1) = {d = n % 10; n ? (q ? d : 2d > 9 ? 2d - 9 : 2d) + luhn(n // 10, 1 - q) : 0}
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
