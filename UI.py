@@ -466,7 +466,7 @@ class UI:
         # highlight pairs of brackets under cursor.
         # if right and left of cursor both have valid pairs, prioritize the right pair.
         pairIdx = self.pos if self.pos in pairs else self.pos - 1 if self.pos - 1 in pairs else None
-        highlight = (None, None) if pairIdx is None else (pairIdx, pairs[pairIdx])
+        highlight = (None, None) if pairIdx is None else [pairIdx, pairs[pairIdx]]
 
         return result, highlight
 

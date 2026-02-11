@@ -39,6 +39,7 @@ class Function(Value):
         else:
             return self.name
 
+
     def invoke(self, argTuple):
     # TODO: rewrite. Should perform the following:
     # - assign its input tuple to the paramsTuple (which writes to its memory)
@@ -52,8 +53,13 @@ class Function(Value):
         return self.expression.value(mem=closure)
 
     def __mul__(self, other):
-        if not isinstance(other, Function): raise EvaluationError('Incorrect type for function composition')
+        if not isinstance(other, Function): raise EvaluationError(f'Invalid operation on Function')
         return FuncComposition(*self.funcList, *other.funcList)
+
+    def __add__(self, other):
+        raise EvaluationError(f'Invalid operation on Function')
+
+    __truediv__ = __rtruediv__ = __sub__ = __rsub__ = __radd__ = __rmul__ = __add__
 
     def __pow__(self, other):
         other = int(other)
