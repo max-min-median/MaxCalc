@@ -158,7 +158,9 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
                 return op.assignmentFn(param.tokens[0], val, mem=mem)
 
         if mem is None: raise MemoryError('LTuple requires memory object to perform assignment')
-        if len(R) > len(self): raise ParseError(f"Cannot destructure a {f"tuple of size {len(R)}" if isinstance(R, Tuple) else "value"} into an LTuple of size {len(self)}")
+        if len(R) > len(self):
+            unable_to_destructure = f"tuple of size {len(R)}" if isinstance(R, Tuple) else "value"
+            raise ParseError(f"Cannot destructure a {unable_to_destructure} into an LTuple of size {len(self)}")
         if len(self) == 1 and not isinstance(R, Expression):
             return assignOneParam(self.tokens[0], R)
         else:
