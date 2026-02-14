@@ -1,8 +1,9 @@
 from settings import Settings
 from operators import *
-import op
-from vars import Value, Var, WordToken, LValue
 from errors import CalculatorError, ParseError
+import op
+from vars import *
+from wordtoken import WordToken
 from functions import Function, LFunc
 
 st = Settings()
@@ -22,6 +23,7 @@ class Expression(Value):
 
 
     def value(self, mem, debug=False):
+
         from tuples import Tuple, LTuple
 
         def evaluate(power=0, index=0, skipEval=False):  # returns (Value, endIndex)

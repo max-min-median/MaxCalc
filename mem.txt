@@ -81,8 +81,6 @@ nQueens(n) = map(map(nQ_makerow(n)))(nQ_raw(n))
 u(n) = 61 + 6(n - 1)
 confidenceInterval(alpha, mean, sd) = {z = invnorm((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
 confidenceInterval_proportion(alpha, p, n) = confidenceInterval(alpha, p, sqrt(p(1 - p)/n))
-unpairedTStat((x1, n1, s1), (x2, n2, s2)) = {sp = ((n1 - 1)s1^2 + (n2 - 1)s2^2)/(n1 + n2 - 2); (x1 - x2) / (sqrt(sp * (1/n1 + 1/n2)))}
-unpairedTStat_withSP2((x1, n1, s1), (x2, n2, s2)) = {sp = ((n1 - 1)s1^2 + (n2 - 1)s2^2)/(n1 + n2 - 2); (sp, (x1 - x2) / (sqrt(sp * (1/n1 + 1/n2))))}
 nQ_makerow(n) = h(i) = repeat(0, i) <+> (1:) <+> repeat(0, n - i - 1)
 nQ_raw(n, curr = (), i = 0, acc = []) = i == n ? acc : curr$ == n ? acc <+> [curr:] : nQ_fits(i, curr) ? nQ_raw(n, curr <+> (i:), 0, acc) <+> nQ_raw(n, curr, i + 1, acc) : nQ_raw(n, curr, i + 1, acc)
 mod(a, n) = a % n
@@ -95,15 +93,20 @@ hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
 gcd3(a, b, c) = gcd(a, gcd(b, c))
 lcm3(a, b, c) = lcm(a, lcm(b, c))
 hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
-f(x) = cos x
+f(x) = (lg x)/(lg 4) + 3/2 (lg 4 / lg x) - 2.5
 polyMult(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> polyMult(1 </ a, b)))
 polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1))
-ans = (27, 5, 17, 295)
+all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
+any(predicate, lst) = lst$ ? predicate(lst @ 0) || any(predicate, 1 </ lst) : 0
+quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = a <= b ? c >= b ? b : c <= a ? a : c : c >= a ? a : c <= b ? b : c; quicksort(filter(x => x < lst @ piv)(lst)) <+> filter(x => x == lst @ piv)(lst) <+> quicksort(filter(x => x > lst @ piv)(lst)))
+ans = 25
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-a = (1, 2, 3)
-b = (4, 5, 6, 7)
-z = -2 + i
-w = 1 + i
+cd = 5
+ab = 5
+d = 5
+c = 5
+b = 5
+a = 5

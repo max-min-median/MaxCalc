@@ -1,13 +1,16 @@
 from settings import Settings
 from errors import ParseError, EvaluationError
-from expressions import Expression
-from vars import LValue, WordToken
+from vars import LValue
+from wordtoken import WordToken
+import expressions as X
+import numbers as N
+# from expressions import Expression
 import op
 
 st = Settings()
 ONE_TUPLE_INDICATOR = ':'  # to be placed before the end bracket, e.g. (3:)
 
-class Tuple(Expression):  # Tuple elements are all Expressions
+class Tuple(X.Expression):  # Tuple elements are all Expressions
 
     def __init__(self, inputStr=None, brackets='()', offset=0):
         super().__init__(inputStr=inputStr, brackets=brackets, offset=offset)
@@ -65,8 +68,7 @@ class Tuple(Expression):  # Tuple elements are all Expressions
             return len(e1) == len(e2)
 
     def __add__(self, other):
-        from number import Number
-        if isinstance(other, Number): raise EvaluationError('Cannot add tuple/vector with non-tuple/vector')
+        if isinstance(other, N.Number): raise EvaluationError('Cannot add tuple/vector with non-tuple/vector')
         if not isinstance(other, Tuple): return NotImplemented
         if len(self) != len(other): raise EvaluationError("Cannot add tuples of different lengths. Did you mean to concatenate '<+>'?")
         tup = self.morphCopy()
@@ -86,9 +88,8 @@ class Tuple(Expression):  # Tuple elements are all Expressions
     def __rsub__(self, other): return self + (-other)
 
     def __mul__(self, other):
-        from number import Number
         if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
-        if not isinstance(other, Number): return NotImplemented
+        if not isinstance(other, N.Number): return NotImplemented
         tup = self.morphCopy()
         tup.tokens = [t * other for t in self.tokens]
         return tup
@@ -96,10 +97,9 @@ class Tuple(Expression):  # Tuple elements are all Expressions
     def __rmul__(self, other): return self * other
 
     def __truediv__(self, other):
-        from number import Number, one
         if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
-        if not isinstance(other, Number): return NotImplemented
-        return self * (one / other)
+        if not isinstance(other, N.Number): return NotImplemented
+        return self * (N.one / other)
     
     def __rtruediv__(self, other):
         raise EvaluationError("Cannot divide by tuple/vector")
@@ -151,7 +151,7 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
 
         def assignOneParam(param, val):  # each param of an LTuple is an Expression
             if val is None:  # then use default parameter. Check for WordToken followed by op.assignment
-                if not isinstance(param, Expression) or len(param.tokens) < 3 or not isinstance(param.tokens[0], LValue) or param.tokens[1] != op.assignment:
+                if not isinstance(param, X.Expression) or len(param.tokens) < 3 or not isinstance(param.tokens[0], LValue) or param.tokens[1] != op.assignment:
                     raise ParseError("Parameter without default argument cannot be omitted")
                 return param.value(mem)
             else:
@@ -161,7 +161,7 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
         if len(R) > len(self):
             unable_to_destructure = f"tuple of size {len(R)}" if isinstance(R, Tuple) else "value"
             raise ParseError(f"Cannot destructure a {unable_to_destructure} into an LTuple of size {len(self)}")
-        if len(self) == 1 and not isinstance(R, Expression):
+        if len(self) == 1 and not isinstance(R, X.Expression):
             return assignOneParam(self.tokens[0], R)
         else:
             for i, param in enumerate(self.tokens):

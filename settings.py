@@ -1,7 +1,6 @@
 from errors import SettingsError
 import json
 
-
 class Settings:
 
     _instance = None

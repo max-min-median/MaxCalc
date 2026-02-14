@@ -1,12 +1,24 @@
-from expressions import Expression, Closure
-from tuples import *
-from number import RealNumber
-from operators import *
-from vars import LValue, WordToken, Value
-import op
-from errors import ParseError
-import re
+# from expressions import Expression, Closure
+# from tuples import *
+# from number import RealNumber
+# from operators import *
+# import op
+# from errors import ParseError
+# import re
 
+import expressions as X
+import tuples as T
+import number as N
+import functions as F
+import op
+from vars import LValue, Value
+from wordtoken import WordToken
+from operators import *
+from errors import *
+import re
+from settings import Settings
+
+st = Settings()
 
 # Performs surface-level parsing and validation. Does not attempt to split WordTokens or evaluate expressions.
 
@@ -28,22 +40,22 @@ def parse(s, offset=0, brackets='', parent=None):
                 return True
         return False
     
-    expr = Expression(inputStr=s, brackets=brackets, offset=offset)
+    expr = X.Expression(inputStr=s, brackets=brackets, offset=offset)
     tokens, posList = expr.tokens, expr.tokenPos
     i = 0
     # print(f"Parsing '{s}', brackets: {brackets}, parent: {parent}")
     while ss := s[i:]:
-        if (ch := ss[0]) == ',' or ch in ')]}' or (ch := ss[:2]) in [f'{ONE_TUPLE_INDICATOR}{ch}' for ch in ')]}']:  # last item in expression / tuple
+        if (ch := ss[0]) == ',' or ch in ')]}' or (ch := ss[:2]) in [f'{T.ONE_TUPLE_INDICATOR}{ch}' for ch in ')]}']:  # last item in expression / tuple
             if parent is None:
                 unexpected = "comma separator ','" if ch == ',' else f"delimiter '{ch}'"
                 raise ParseError(f"Unexpected {unexpected} outside a tuple. Please enclose tuples in parentheses '()'.", (offset + i, offset + i + 1))
             elif ch != ',' and ch[-1] != parent.brackets[-1]:
-                raise ParseError(f"Unexpected delimiter '{ch}'; should be '{(ONE_TUPLE_INDICATOR if len(ch) == 2 else '') + parent.brackets[-1]}' instead", (offset + i, offset + i + len(ch)))
+                raise ParseError(f"Unexpected delimiter '{ch}'; should be '{(T.ONE_TUPLE_INDICATOR if len(ch) == 2 else '') + parent.brackets[-1]}' instead", (offset + i, offset + i + len(ch)))
             expr.inputStr = expr.inputStr[:i]
             validate(expr)
             return expr
         elif ss[0] in '([{': # tuple or bracketed expression
-            tup = Tuple(inputStr=ss[0:], brackets={'(': '()', '[': '[]', '{': '{}'}[ss[0]], offset=i)
+            tup = T.Tuple(inputStr=ss[0:], brackets={'(': '()', '[': '[]', '{': '{}'}[ss[0]], offset=i)
             i += 1
             while True:
                 exprStartPos = i
@@ -53,7 +65,7 @@ def parse(s, offset=0, brackets='', parent=None):
                 i += len(childExpr.inputStr)
                 if s[i:i+1] == ',':
                     i += 1
-                elif (rb := ' ') and i >= len(s) or (rb := s[i]) == tup.brackets[-1] or (rb := s[i:i+2]) == f'{ONE_TUPLE_INDICATOR}{tup.brackets[-1]}':
+                elif (rb := ' ') and i >= len(s) or (rb := s[i]) == tup.brackets[-1] or (rb := s[i:i+2]) == f'{T.ONE_TUPLE_INDICATOR}{tup.brackets[-1]}':
                     expr.tokenPos.append((tup.offset, i + len(rb)))
                     if len(tup) == 1 and len(tup.tokens[0].tokens) == 0:  # Tuple contains 1 empty expression; remove it.
                         tup.tokens, tup.tokenPos = [], []
@@ -65,9 +77,9 @@ def parse(s, offset=0, brackets='', parent=None):
 
         elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):   # Number. Cannot follow Number, spaceSeparator, or Var
             if (exponent := m.groups()[1]) is not None:
-                addToken(RealNumber.fromScientificNotation(m.groups()[0], m.groups()[1]), m)
+                addToken(N.RealNumber.fromScientificNotation(m.groups()[0], m.groups()[1]), m)
             else:
-                addToken(RealNumber(m.groups()[0], fcf=True, epsilon=st.epsilon), m)
+                addToken(N.RealNumber(m.groups()[0], fcf=True, epsilon=st.epsilon), m)
         elif checkOpRegex():
             continue
         elif m := re.match(r'([A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?)', ss):  # Word token (might be a concatenation of vars & possible func at the end) 
@@ -91,7 +103,7 @@ def validate(expr):
         # Transform / remove some types of tokens
         match lst[i-1:i+2]:
             case [_any_, PrefixFunction(), None]: raise ParseError(f"Missing inputs for function '{str(lst[i])}'", posList[i])
-            case [_any_, PrefixFunction(), _notExpression_] if not isinstance(_notExpression_, Expression):
+            case [_any_, PrefixFunction(), _notExpression_] if not isinstance(_notExpression_, X.Expression):
                 raise ParseError(f"'{str(lst[i])}' must be followed by bracketed expression.", posList[i])
             # Bin cannot follow Bin / UL / None
             case [Infix() | Prefix() | None, Infix(), _any_]: raise ParseError(f"Unexpected operator '{str(lst[i])}'", posList[i])
@@ -107,8 +119,8 @@ def validate(expr):
             case [_any_, op.ambiguousPlus | op.ambiguousMinus, _any2_]:
                 lst[i] = op.addition if lst[i] == op.ambiguousPlus else op.subtraction
                 i -= 2
-            case [op.assignment | op.lambdaArrow, Expression(), _maybeSpaceSeparator_] if not isinstance(lst[i], Closure) and lst[i].brackets == '{}' and len(lst[i]) == 1 and isinstance(w := lst[i].tokens[0], Expression) and w.brackets == '{}':
-                lst[i] = lst[i].morphCopy(Closure)
+            case [op.assignment | op.lambdaArrow, X.Expression(), _maybeSpaceSeparator_] if not isinstance(lst[i], X.Closure) and lst[i].brackets == '{}' and len(lst[i]) == 1 and isinstance(w := lst[i].tokens[0], X.Expression) and w.brackets == '{}':
+                lst[i] = lst[i].morphCopy(X.Closure)
                 lst[i].tokenPos = lst[i].tokens[0].tokenPos
                 lst[i].tokens = lst[i].tokens[0].tokens
                 lst[i].brackets = '{{', '}}'
@@ -119,7 +131,7 @@ def validate(expr):
                 # if lst[i+1] is a space separator, remove it.
                 # put a op.closureCombiner (Infix) after the new Closure.
             # Numbers cannot follow space separators or evaluables
-            case [Value() | op.spaceSeparator, RealNumber(), _any_]: raise ParseError(f"Number '{str(lst[i])}' cannot follow space separator or an evaluable expression", posList[i])
+            case [Value() | op.spaceSeparator, N.RealNumber(), _any_]: raise ParseError(f"Number '{str(lst[i])}' cannot follow space separator or an evaluable expression", posList[i])
             # UR has to follow an evlauable or other UR
             case [_operand_, Postfix(), _any_] if not isinstance(_operand_, (Value, WordToken, Postfix)): raise ParseError(f"Unexpected operator '{str(lst[i])}'", posList[i])
             # UL cannot precede Bin, UR or None
@@ -127,11 +139,10 @@ def validate(expr):
             case [_any_, WordToken(), op.assignment | op.lambdaArrow]:
                 lst[i] = lst[i].morphCopy(LValue)
                 i -= 2
-            case [_any_, Expression(), op.assignment | op.lambdaArrow] if not isinstance(lst[i], LTuple):
-                lst[i] = LTuple(lst[i])
+            case [_any_, X.Expression(), op.assignment | op.lambdaArrow] if not isinstance(lst[i], T.LTuple):
+                lst[i] = T.LTuple(lst[i])
                 if lst[i + 1] == op.assignment and isinstance(lst[i - 1], WordToken):  # combine lst[i - 1] and lst[i] into an LFunc
-                    from functions import LFunc
-                    lst[i - 1: i + 1] = [LFunc(lst[i - 1], lst[i])]
+                    lst[i - 1: i + 1] = [F.LFunc(lst[i - 1], lst[i])]
                     posList[i - 1: i + 1] = [(posList[i - 1][0], posList[i][1])]
                     i -= 1
                     continue
@@ -142,6 +153,7 @@ def validate(expr):
 if __name__ == '__main__':
     from memory import Memory
     mem = Memory()
+    st._loadFile("settings.txt")
 
     def testFunc():
         exp1 = parse('f(xab, xac) = 2 + 3')
@@ -214,4 +226,5 @@ if __name__ == '__main__':
         # result2 = exp7.value
         pass
 
+    test1()
     testClosures()
