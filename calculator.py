@@ -1,6 +1,6 @@
 from settings import Settings
 from vars import *
-from memory import GlobalMemory
+from memory import Memory
 import op
 from errors import *
 from parser import parse
@@ -26,7 +26,8 @@ def main():
     settingsPath = basedir/'settings.txt'
     historyPath = basedir/'history.txt'
     st = Settings(settingsPath)
-    mainMem = GlobalMemory(memPath)
+    mainMem = Memory.globalMem
+    mainMem.load(memPath)
     mainMem.trie = trie = Trie.fromCollection(mainMem.fullDict())
     ui = UI(mainMem, historyPath)
 

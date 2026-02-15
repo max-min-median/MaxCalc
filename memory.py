@@ -50,15 +50,11 @@ class Memory:
 
 class GlobalMemory(Memory):
 
-    def __init__(self, filepath=None):
-        if filepath is None: raise MemoryError("Must specify a memory file.")
-        from pathlib import Path
+    def __init__(self):
+        # if filepath is None: raise MemoryError("Must specify a memory file.")
         self.vars = {}
         self.trie = None
-        self.filepath = filepath
         self.writeLock = True
-        Memory.globalMem = self
-        if filepath.exists(): self.load()
 
     def add(self, string, val, save=True):
         if string == 'ans':
@@ -99,10 +95,15 @@ class GlobalMemory(Memory):
                 else:
                     f.write(f"{var} = {value.fromString if hasattr(value, 'fromString') else str(value)}\n")
 
-    def load(self):
+    def load(self, filepath):
+        if not filepath.exists(): raise FileNotFoundError(f"Unable to open {filepath}")
+        self.filepath = filepath
         import parser
         with open(self.filepath) as f:
             for line in f:
                 parser.parse(line).value(mem=self)
         self.writeLock = False
         self.save()
+
+
+Memory.globalMem = GlobalMemory()

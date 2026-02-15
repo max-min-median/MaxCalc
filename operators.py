@@ -1,3 +1,5 @@
+import functions as F
+
 class Operator:
     def __init__(self, name='<op>', function=lambda x: 'undefined op'):
         self.name = name
