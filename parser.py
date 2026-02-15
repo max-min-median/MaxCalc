@@ -10,6 +10,7 @@ import expressions as X
 import tuples as T
 import number as N
 import functions as F
+from strings import String
 import op
 from vars import LValue, Value
 from wordtoken import WordToken
@@ -54,7 +55,7 @@ def parse(s, offset=0, brackets='', parent=None):
             expr.inputStr = expr.inputStr[:i]
             validate(expr)
             return expr
-        elif ss[0] in '([{': # tuple or bracketed expression
+        elif ss[0] in '([{':  # tuple or bracketed expression
             tup = T.Tuple(inputStr=ss[0:], brackets={'(': '()', '[': '[]', '{': '{}'}[ss[0]], offset=i)
             i += 1
             while True:
@@ -74,8 +75,10 @@ def parse(s, offset=0, brackets='', parent=None):
                     i += len(rb)
                     break
             expr.tokens.append(tup)
-
-        elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):   # Number. Cannot follow Number, spaceSeparator, or Var
+        elif ss[0] == "\"":  # string
+            m = re.match(r"(\"([^\"]*)\"?)", ss)
+            addToken(String(m.groups()[1]), m)
+        elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):  # Number. Cannot follow Number, spaceSeparator, or Var
             if (exponent := m.groups()[1]) is not None:
                 addToken(N.RealNumber.fromScientificNotation(m.groups()[0], m.groups()[1]), m)
             else:
@@ -96,8 +99,8 @@ def validate(expr):
     # Validation checks
     i = 1
     # Remove space separators that come at the start or end
-    if len(expr.tokens) > 0 and expr.tokens[0] == op.spaceSeparator: expr.tokens.pop(0); expr.tokenPos.pop(0)
-    if len(expr.tokens) > 0 and expr.tokens[-1] == op.spaceSeparator: expr.tokens.pop(); expr.tokenPos.pop()
+    if len(expr.tokens) > 0 and expr.tokens[0] is op.spaceSeparator: expr.tokens.pop(0); expr.tokenPos.pop(0)
+    if len(expr.tokens) > 0 and expr.tokens[-1] is op.spaceSeparator: expr.tokens.pop(); expr.tokenPos.pop()
     lst, posList = [None] + expr.tokens + [None], [None] + expr.tokenPos + [None]
     while i < len(lst) - 1:
         # Transform / remove some types of tokens
@@ -112,19 +115,19 @@ def validate(expr):
             case [_any_, Infix() | Prefix(), None]:
                 raise ParseError(f"Missing operand for '{str(lst[i])}'", posList[i])
             # L to R: Convert +/- to positive/negative if they come after Bin / UL
-            case [None | Infix() | Prefix(), op.ambiguousPlus | op.ambiguousMinus, _any_]:
-                lst[i] = op.positive if lst[i] == op.ambiguousPlus else op.negative
+            case [None | Infix() | Prefix(), Operator(), _any_] if lst[i] is op.ambiguousMinus or lst[i] is op.ambiguousPlus:
+                lst[i] = op.positive if lst[i] is op.ambiguousPlus else op.negative
                 i -= 2
             # L to R: If not, convert +/- to addition/subtraction
-            case [_any_, op.ambiguousPlus | op.ambiguousMinus, _any2_]:
-                lst[i] = op.addition if lst[i] == op.ambiguousPlus else op.subtraction
+            case [_any_, Operator(), _any2_] if lst[i] is op.ambiguousMinus or lst[i] is op.ambiguousPlus:
+                lst[i] = op.addition if lst[i] is op.ambiguousPlus else op.subtraction
                 i -= 2
-            case [op.assignment | op.lambdaArrow, X.Expression(), _maybeSpaceSeparator_] if not isinstance(lst[i], X.Closure) and lst[i].brackets == '{}' and len(lst[i]) == 1 and isinstance(w := lst[i].tokens[0], X.Expression) and w.brackets == '{}':
+            case [Operator(), X.Expression(), _maybeSpaceSeparator_] if (lst[i-1] is op.assignment or lst[i-1] is op.lambdaArrow) and not isinstance(lst[i], X.Closure) and lst[i].brackets == '{}' and len(lst[i]) == 1 and isinstance(w := lst[i].tokens[0], X.Expression) and w.brackets == '{}':
                 lst[i] = lst[i].morphCopy(X.Closure)
                 lst[i].tokenPos = lst[i].tokens[0].tokenPos
                 lst[i].tokens = lst[i].tokens[0].tokens
                 lst[i].brackets = '{{', '}}'
-                if lst[i + 1] == op.spaceSeparator:
+                if lst[i + 1] is op.spaceSeparator:
                     lst.pop(i + 1)
                     posList.pop(i + 1)
                 # change Expression to a Closure
@@ -136,12 +139,12 @@ def validate(expr):
             case [_operand_, Postfix(), _any_] if not isinstance(_operand_, (Value, WordToken, Postfix)): raise ParseError(f"Unexpected operator '{str(lst[i])}'", posList[i])
             # UL cannot precede Bin, UR or None
             # case [Infix() | Prefix() | Value(), LValue(), _any_] if lst[i-1] != op.assignment: raise ParseError(f"RValue cannot be the target of an assignment", posList[i])
-            case [_any_, WordToken(), op.assignment | op.lambdaArrow]:
+            case [_any_, WordToken(), Operator()] if lst[i+1] is op.assignment or lst[i+1] is op.lambdaArrow:
                 lst[i] = lst[i].morphCopy(LValue)
                 i -= 2
-            case [_any_, X.Expression(), op.assignment | op.lambdaArrow] if not isinstance(lst[i], T.LTuple):
+            case [_any_, X.Expression(), Operator()] if not isinstance(lst[i], T.LTuple) and (lst[i+1] is op.assignment or lst[i+1] is op.lambdaArrow):
                 lst[i] = T.LTuple(lst[i])
-                if lst[i + 1] == op.assignment and isinstance(lst[i - 1], WordToken):  # combine lst[i - 1] and lst[i] into an LFunc
+                if lst[i + 1] is op.assignment and isinstance(lst[i - 1], WordToken):  # combine lst[i - 1] and lst[i] into an LFunc
                     lst[i - 1: i + 1] = [F.LFunc(lst[i - 1], lst[i])]
                     posList[i - 1: i + 1] = [(posList[i - 1][0], posList[i][1])]
                     i -= 1

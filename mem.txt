@@ -20,7 +20,7 @@ bin(n, bits = 32) = binHelper(n + (n < 0) * 2^bits, bits - 1, 0)
 binHelper(n, p, res) = {c = n // 2^p; p ? binHelper(n - c * 2^p, p - 1, 10res + c) : 10res + c}
 proj(u, v) = (u.v) / (v.v) v
 scalarMult(k, (a, b, c, d)) = (ka, kb, kc, kd)
-root(f, a, b, inc = (b - a)/1000, delta = delta, h = f(b)) = f(a) * h < 0 ? rootFind(f, a, b, delta, f(a), h) : a + inc < b ? root(f, a + inc, b, inc, delta) : ()
+root(f, a, b, inc = (b - a)/1000, delta = delta, h = f(b)) = f(a) * h < 0 ? rootFind(f, a, b, delta, f(a), h) : a + inc < b ? root(f, a + inc, b, inc, delta) : "No solution found!"
 rootFind(f, a, b, delta, l = f(a), h = f(b), m = f((a + b)/2)) = b - a <* delta ? (a + b)/2 : m * l <* 0 ? rootFind(f, a, (a + b)/2, delta, l, m) : rootFind(f, (a + b)/2, b, delta, m, h)
 integHelper(f, a, b, dx) = a >= b ? f(b) : f(a) + integHelper(f, a + dx, b, dx)
 integrate(f, a, b, dx = (b - a)/100) = dx/2 * (f(a) + 2 * integHelper(f, a + dx, b - dx, dx))
@@ -99,7 +99,8 @@ polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a -
 all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
 any(predicate, lst) = lst$ ? predicate(lst @ 0) || any(predicate, 1 </ lst) : 0
 quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = a <= b ? c >= b ? b : c <= a ? a : c : c >= a ? a : c <= b ? b : c; quicksort(filter(x => x < lst @ piv)(lst)) <+> filter(x => x == lst @ piv)(lst) <+> quicksort(filter(x => x > lst @ piv)(lst)))
-ans = 25
+greet(name, n = 1) = "Hello " * n + name
+ans = 0
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
@@ -110,3 +111,5 @@ d = 5
 c = 5
 b = 5
 a = 5
+x = 1
+counter = 0

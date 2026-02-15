@@ -74,23 +74,23 @@ class Expression(Value):
                         L, index = evaluate(power=token.power[1], index=index+1, skipEval=skipEval)
                         L = tryOperate(L)
                     case Ternary():
-                        if token == op.ternary_else:
+                        if token is op.ternary_else:
                             raise ParseError("Unexpected operator ' : '", self.parsedPos[index])
                         from number import zero
                         ternaryIndex = index
                         if not skipEval: isTrue = op.eq.function(L, zero) == zero
                         trueVal, index = evaluate(power=token.power[1], index=index+1, skipEval=skipEval or not isTrue)
-                        if self.parsed[index + 1] != op.ternary_else: raise ParseError("Missing else clause ':' for ternary operator", self.parsedPos[ternaryIndex])
+                        if self.parsed[index + 1] is not op.ternary_else: raise ParseError("Missing else clause ':' for ternary operator", self.parsedPos[ternaryIndex])
                         falseVal, index = evaluate(power=op.ternary_else.power[1], index=index+2, skipEval=skipEval or isTrue)
                         if not skipEval: L = trueVal if isTrue else falseVal
                     case Postfix():
                         L = tryOperate(L)
-                    case op.assignment | op.lambdaArrow:
+                    case Operator() if token is op.assignment or token is op.lambdaArrow:
                         if not isinstance(L, LValue) and not skipEval: raise ParseError(f"Invalid LValue for operator '{token.name}'", self.parsedPos[index - 1])
                         oldIndex = index
-                        if isinstance(L, LFunc) or token == op.lambdaArrow:  # create a function
+                        if isinstance(L, LFunc) or token is op.lambdaArrow:  # create a function
                             closure = mem.copy()
-                            if token == op.lambdaArrow:
+                            if token is op.lambdaArrow:
                                 funcName = None
                                 if not isinstance(L, LTuple):  # build a tuple with this
                                     innerExpr = self.morphCopy(Expression)
@@ -150,5 +150,4 @@ class Expression(Value):
 
 
 class Closure(Expression):
-
     def __repr__(self): return f"Closure('{str(self)}')"

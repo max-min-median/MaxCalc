@@ -42,7 +42,6 @@ class LValue(Value):  # variable ready for assignment. Has NO value
         super().__init__(name=name, value=value)
 
     def value(self, *args, **kwargs):
-        # return self._value if self._value is not None else self.name
         return self
 
     def makeVar(self, value=None):

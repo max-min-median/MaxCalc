@@ -1,7 +1,7 @@
 from operators import Prefix, Infix
 import number as N
 import functions as F
-from vars import Var
+from vars import Var, Value
 from errors import ParseError
 
 class WordToken:
@@ -20,11 +20,10 @@ class WordToken:
         def trySplit(s, numAllowed=False, onlyFuncsAllowed=False):
             if s == '': return [[]], [[]]
             lst, varList = [], []
-            for i in reversed(range(len(s))):
+            for i in reversed(range(len(s))):  # try longest prefixes first
                 val = mem.get(thisWord := s[:i+1])
-                if val is not None:
-                    if isinstance(val, N.Number): thisWord = Var(thisWord)
-                    else: thisWord = val
+                if val is not None:  # if this prefix is registered in memory
+                    thisWord = Var(thisWord) if isinstance(val, N.Number) else val  # if val is a Number, get its corresponding variable. Unnecessary otherwise, since val would already be the variable.
                     if onlyFuncsAllowed and not isinstance(thisWord, F.Function): continue
                     if i == len(s) - 1 and isinstance(thisWord, Prefix) and not isinstance(nextToken, Value): continue  # allow stuff like 'ksin3.0pi'
                 elif numAllowed and not onlyFuncsAllowed and s[:i+1].isdigit() and not s[i+1:i+2].isdigit():
@@ -32,8 +31,9 @@ class WordToken:
                 else:
                     continue
                 splitRest, splitRestVars = trySplit(s[i+1:], numAllowed=isinstance(thisWord, (Prefix, Infix)), onlyFuncsAllowed=(type(thisWord) == F.Function))
-                lst += [[s[:i+1]] + spl for spl in splitRest]
-                varList += [[thisWord] + spl for spl in splitRestVars]
+                head = [s[:i+1]]
+                lst += [head + spl for spl in splitRest]
+                varList += [[thisWord] + splVar for splVar in splitRestVars]
             return lst, varList
         
         splitList, varList = trySplit(self.name)
