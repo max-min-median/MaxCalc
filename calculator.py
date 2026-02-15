@@ -1,6 +1,7 @@
 from settings import Settings
 from vars import *
 from memory import GlobalMemory
+import op
 from errors import *
 from parser import parse
 from number import *

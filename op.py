@@ -4,6 +4,7 @@ from errors import *
 from vars import LValue
 from number import *
 from settings import Settings
+import memory
 
 st = Settings()
 
@@ -615,3 +616,42 @@ power = {
 # 3-OR-3
 # 2-Assignment-2
 # 1-Comma-1
+
+memory.Memory.baseList = {
+    'e': e,
+    'pi': pi,
+    'i': imag_i,
+    'P': permutation,   # These are here so that
+    'C': combination,   # they are overrideable.
+}
+
+memory.Memory.topList = {
+    'abs': absolute,   # These override user vars
+    'arg': argument,
+    'conj': conjugate,
+    'Im': imPart,
+    'Re': realPart,
+    'sgn': signum,
+    'sin': sin,
+    'cosec': csc,
+    'csc': csc,
+    'cos': cos,
+    'sec': sec,
+    'tan': tan,
+    'cot': cot,
+    'sinh': sinh,
+    'cosh': cosh,
+    'tanh': tanh,
+    'asin': arcsin,
+    'arcsin': arcsin,
+    'acos': arccos,
+    'arccos': arccos,
+    'atan': arctan,
+    'arctan': arctan,
+    'sqrt': sqrt,
+    'ln': ln,
+    'lg': lg,
+    'normcdf': normcdf,
+    'normpdf': normpdf,
+    'invnorm': invnorm,
+}

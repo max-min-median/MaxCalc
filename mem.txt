@@ -100,16 +100,8 @@ all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
 any(predicate, lst) = lst$ ? predicate(lst @ 0) || any(predicate, 1 </ lst) : 0
 quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = a <= b ? c >= b ? b : c <= a ? a : c : c >= a ? a : c <= b ? b : c; quicksort(filter(x => x < lst @ piv)(lst)) <+> filter(x => x == lst @ piv)(lst) <+> quicksort(filter(x => x > lst @ piv)(lst)))
 greet(name, n = 1) = "Hello " * n + name
-ans = 0
+ans = x => {{y = 0}} (x = x + 1; x)
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-cd = 5
-ab = 5
-d = 5
-c = 5
-b = 5
-a = 5
-x = 1
-counter = 0

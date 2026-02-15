@@ -1,6 +1,5 @@
 from number import *
 from functions import Function, FuncComposition
-import op
 from settings import Settings
 
 st = Settings()
@@ -11,45 +10,6 @@ class Memory:
     # Base class intended for use by Functions.
 
     globalMem = None
-
-    baseList = {
-        'e': e,
-        'pi': pi,
-        'i': imag_i,
-        'P': op.permutation,   # These are here so that
-        'C': op.combination,   # they are overrideable.
-    }
-
-    topList = {
-        'abs': op.absolute,   # These override user vars
-        'arg': op.argument,
-        'conj': op.conjugate,
-        'Im': op.imPart,
-        'Re': op.realPart,
-        'sgn': op.signum,
-        'sin': op.sin,
-        'cosec': op.csc,
-        'csc': op.csc,
-        'cos': op.cos,
-        'sec': op.sec,
-        'tan': op.tan,
-        'cot': op.cot,
-        'sinh': op.sinh,
-        'cosh': op.cosh,
-        'tanh': op.tanh,
-        'asin': op.arcsin,
-        'arcsin': op.arcsin,
-        'acos': op.arccos,
-        'arccos': op.arccos,
-        'atan': op.arctan,
-        'arctan': op.arctan,
-        'sqrt': op.sqrt,
-        'ln': op.ln,
-        'lg': op.lg,
-        'normcdf': op.normcdf,
-        'normpdf': op.normpdf,
-        'invnorm': op.invnorm,
-    }
 
     def __init__(self, filename=None):
         self.vars = {}
