@@ -396,7 +396,7 @@ class UI:
                     toCopy = ''.join(x[0] for x in (toCopy[len(self.prompt):] if hasPrompt else toCopy))
                     curses.ungetch(96)  # switch back to input window
                     for ch in toCopy[::-1]:
-                        curses.ungetch(ord(ch))
+                        keys.append(ord(ch))
             elif key == 3:  # Ctrl-C
                 if self.activeWin == "input":
                     if self.selectionAnchor is not None:
@@ -434,7 +434,13 @@ class UI:
     def pairBrackets(self, text):
         from itertools import cycle
         iterColors = cycle(UI.bracketColors)
-        allBrackets = [*filter(lambda tup: tup[1] in '()[]{}', enumerate(text))]
+
+        allBrackets, inQuotes = [], False
+        for tup in enumerate(text):
+            if tup[1] == "\"": inQuotes = not inQuotes
+            elif tup[1] in '()[]{}' and not inQuotes: allBrackets.append(tup)
+        # allBrackets = [*filter(lambda tup: tup[1] in '()[]{}', enumerate(text))]
+        
         bracketsSoFar = {'(': 0, '[': 0, '{': 0}
         pairs = {}
         stack, takebackColors = [], []

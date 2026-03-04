@@ -15,6 +15,8 @@ class String(Value):
     def value(self, *args, **kwargs):
         return self
 
+    def conj(self): return self
+
     def __add__(self, other):
         # if isinstance(other, (int, float)): other = RealNumber(other)
         return String(self.string + (other.string if isinstance(other, String) else str(other)))

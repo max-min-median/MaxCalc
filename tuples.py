@@ -3,7 +3,8 @@ from errors import ParseError, EvaluationError
 from vars import LValue
 from wordtoken import WordToken
 import expressions as X
-import numbers as N
+import number as N
+import strings as S
 # from expressions import Expression
 import op
 
@@ -68,15 +69,26 @@ class Tuple(X.Expression):  # Tuple elements are all Expressions
             return len(e1) == len(e2)
 
     def __add__(self, other):
-        if isinstance(other, N.Number): raise EvaluationError('Cannot add tuple/vector with non-tuple/vector')
-        if not isinstance(other, Tuple): return NotImplemented
-        if len(self) != len(other): raise EvaluationError("Cannot add tuples of different lengths. Did you mean to concatenate '<+>'?")
-        tup = self.morphCopy()
-        for i, (t1, t2) in enumerate(zip(self.tokens, other.tokens)):
-            tup.tokens[i] = t1 + t2
-        return tup
+        if isinstance(other, (N.Number, S.String)):
+            tup = self.morphCopy()
+            tup.tokens = [t + other for t in self.tokens]
+            return tup
+        elif not isinstance(other, Tuple):
+            raise EvaluationError('Cannot add tuple to this item')
+        elif len(self) != len(other):
+            raise EvaluationError("Cannot add tuples of different lengths. Did you mean to concatenate '<+>'?")
+        else:
+            tup = self.morphCopy()
+            tup.tokens = [t1 + t2 for (t1, t2) in zip(self.tokens, other.tokens)]
+            return tup
 
-    def __radd__(self, other): return self + other
+    def __radd__(self, other):
+        if isinstance(other, (N.Number, S.String)):
+            tup = self.morphCopy()
+            tup.tokens = [other + t for t in self.tokens]
+            return tup
+        else:
+            return self + other
 
     def __neg__(self):
         tup = self.morphCopy()
@@ -85,24 +97,51 @@ class Tuple(X.Expression):  # Tuple elements are all Expressions
         return tup
     
     def __sub__(self, other): return self + (-other)
-    def __rsub__(self, other): return self + (-other)
+    def __rsub__(self, other): return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
-        if not isinstance(other, N.Number): return NotImplemented
-        tup = self.morphCopy()
-        tup.tokens = [t * other for t in self.tokens]
-        return tup
+        if isinstance(other, (N.Number, S.String)):
+            tup = self.morphCopy()
+            tup.tokens = [t * other for t in self.tokens]
+            return tup
+        elif not isinstance(other, Tuple):
+            raise EvaluationError('Cannot multiply tuple with this item')
+        elif len(self) != len(other):
+            raise EvaluationError("Cannot (element-wise) multiply tuples of different lengths")
+        else:
+            tup = self.morphCopy()
+            tup.tokens = [t1 * t2 for (t1, t2) in zip(self.tokens, other.tokens)]
+            return tup
 
-    def __rmul__(self, other): return self * other
+    def __rmul__(self, other):
+        if not isinstance(other, (N.Number, S.String)):
+            raise EvaluationError("Cannot multiply tuple to this item")
+        else:
+            tup = self.morphCopy()
+            tup.tokens = [other * t for t in self.tokens]
+            return tup
 
     def __truediv__(self, other):
-        if isinstance(other, Tuple): raise EvaluationError("Cannot scalar multiply tuple/vector with non-Number. Did you mean dot product '.' or cross product '><' instead?")
-        if not isinstance(other, N.Number): return NotImplemented
-        return self * (N.one / other)
-    
+        if isinstance(other, N.Number):
+            tup = self.morphCopy()
+            tup.tokens = [t / other for t in self.tokens]
+            return tup
+        elif not isinstance(other, Tuple):
+            raise EvaluationError('Cannot divide tuple by this item')
+        elif len(self) != len(other):
+            raise EvaluationError("Cannot (element-wise) divide tuples of different lengths")
+        else:
+            tup = self.morphCopy()
+            tup.tokens = [t1 / t2 for (t1, t2) in zip(self.tokens, other.tokens)]
+            return tup
+
     def __rtruediv__(self, other):
-        raise EvaluationError("Cannot divide by tuple/vector")
+        if not isinstance(other, N.Number):
+            raise EvaluationError('Cannot divide this item by a tuple')
+        else:
+            tup = self.morphCopy()
+            tup.tokens = [other / t for t in self.tokens]
+            return tup
 
     def __ne__(self, other): return not self == other
     def __ge__(self, other): return not self < other
@@ -129,7 +168,7 @@ class LTuple(LValue, Tuple):  # LTuple elements are all Expressions.
         def checkExpr(expr):
             if isinstance(expr.tokens[0], Tuple) and not isinstance(expr.tokens[0], LTuple):
                 expr.tokens[0] = LTuple(expr.tokens[0])
-            elif not isinstance(expr.tokens[0], (WordToken, LValue)) or len(expr.tokens) > 1 and expr.tokens[1] != op.assignment:
+            elif not isinstance(expr.tokens[0], (WordToken, LValue)) or len(expr.tokens) > 1 and expr.tokens[1] is not op.assignment:
                 raise ParseError("Each parameter must be exactly one WordToken or LValue (with optional default expression)", (expr.tokenPos[0][0], expr.tokenPos[-1][-1]))
             elif isinstance(expr.tokens[0], WordToken):
                 expr.tokens[0] = expr.tokens[0].morphCopy(LValue)
