@@ -213,18 +213,20 @@ def assignmentFn(L, R, mem=None):
     mem.add(L.name, R)
     return R
 
-def indexFn(tup, idx):
+def indexFn(tupOrString, idx):
     from tuples import Tuple
-    if not isinstance(tup, Tuple): raise EvaluationError("Index operator expects a tuple")
+    from strings import String
+    if not isinstance(tupOrString, (Tuple, String)): raise EvaluationError("Index operator expects a tuple/string")
     if not isinstance(idx, RealNumber) or not idx.isInt(): raise EvaluationError("Index must be an integer")
     idx = int(idx)
-    if idx < 0 or idx >= len(tup): raise EvaluationError(f"index {idx} is out of bounds for this tuple")
-    return tup.tokens[idx]
+    if idx < 0 or idx >= len(tupOrString): raise EvaluationError(f"index {idx} is out of bounds for this tuple")
+    return tupOrString.tokens[idx] if isinstance(tupOrString, Tuple) else tupOrString.string[idx]
 
-def tupLengthFn(tup):
+def lengthFn(tupOrString):
     from tuples import Tuple
-    if not isinstance(tup, Tuple): raise EvaluationError("Length operator expects a tuple")
-    return RealNumber(len(tup))
+    from strings import String
+    if not isinstance(tupOrString, (Tuple, String)): raise EvaluationError("Length operator expects a tuple/string")
+    return RealNumber(len(tupOrString))
 
 def tupConcatFn(tup1, tup2):
     from tuples import Tuple
@@ -235,24 +237,31 @@ def tupConcatFn(tup1, tup2):
     return result
 
 def knifeFn(dir):
+
+    from tuples import Tuple
+    from strings import String
+
     def check(L, R):  # ensures that L is the index and R is the tuple.
-        from tuples import Tuple
-        if not isinstance(L, RealNumber) or not isinstance(R, Tuple): return False
+        if not isinstance(L, RealNumber) or not isinstance(R, (Tuple, String)): return False
         if not L.isInt(): raise EvaluationError("Knife operator expects an integer operand")
         L = int(L)
-        if L < 0 or L > len(R): raise EvaluationError(f"Unable to slice {L} element(s) from this tuple")
+        if L < 0 or L > len(R): raise EvaluationError(f"Unable to slice {L} element(s) from this tuple/string")
         return True
     
     def knife(L, R):
+        from strings import String
         if check(L, R):
-            tup = R.morphCopy()
+            tupOrString = R.morphCopy()
             mid = int(L)
         elif check(R, L):
-            tup = L.morphCopy()
-            mid = len(tup) - int(R)
-        else: raise EvaluationError(f"Knife operator '{dir}' expects a tuple and an integer")
-        tup.tokens = tup.tokens[mid:] if dir == '</' else tup.tokens[:mid]
-        return tup
+            tupOrString = L.morphCopy()
+            mid = len(tupOrString) - int(R)
+        else: raise EvaluationError(f"Knife operator '{dir}' expects a tuple/string and an integer")
+        if isinstance(tupOrString, String):
+            tupOrString.string = tupOrString.string[mid:] if dir == '</' else tupOrString.string[:mid]
+        else:
+            tupOrString.tokens = tupOrString.tokens[mid:] if dir == '</' else tupOrString.tokens[:mid]
+        return tupOrString
 
     return knife
 
@@ -340,6 +349,43 @@ def invNormalCdfFn(L):
     return mu + sigma * sqrt2 * RealNumber(invErf(two * L - one))
 
 
+def readFile(fileString):
+    from strings import String
+    if not isinstance(fileString, String): raise EvaluationError('Expects a single parameter "filename"')
+    filename = fileString.string
+    with open(filename) as f:
+        res = f.read()
+    return String(res.replace('\n', '\\n'))
+
+
+def wordsFn(string):
+    from strings import String
+    from tuples import Tuple
+    if not isinstance(string, String): raise EvaluationError('Expects a single string')
+    tup = Tuple()
+    tup.tokens = [*map(String, string.string.split())]
+    return tup
+
+def linesFn(string):
+    from strings import String
+    from tuples import Tuple
+    if not isinstance(string, String): raise EvaluationError('Expects a single string')
+    tup = Tuple()
+    tup.tokens = [*map(String, string.string.split('\\n'))]
+    return tup
+
+
+def splitFn(tup):
+    from strings import String
+    from tuples import Tuple
+    if isinstance(tup, String): return wordsFn(tup)
+    if len(tup) != 2 or not isinstance(tup.tokens[0], String) or not isinstance(tup.tokens[1], String):
+        raise EvaluationError("Expects (string, separator)")
+    result = Tuple()
+    result.tokens = [*map(String, tup.tokens[0].string.split(tup.tokens[1].string))]
+    return result
+
+
 assignment = Infix(' = ', assignmentFn)
 lambdaArrow = Infix(' => ', lambdaArrowFn)
 spaceSeparator = Infix(' ', lambda x, y: x * y)
@@ -365,7 +411,7 @@ indexing = Infix(' @ ', indexFn)
 leftKnife = Infix(' </ ', knifeFn('</'))
 rightKnife = Infix(' /> ', knifeFn('/>'))
 tupConcat = Infix(' <+> ', tupConcatFn)
-tupLength = Postfix('$', tupLengthFn)
+length = Postfix('$', lengthFn)
 lt = Infix(' < ', lambda x, y: one if comparator(x, y) < zero else zero)
 ltEq = Infix(' <= ', lambda x, y: one if comparator(x, y) <= zero else zero)
 gt = Infix(' > ', lambda x, y: one if comparator(x, y) > zero else zero)
@@ -425,6 +471,10 @@ vectorCrossProduct = Infix('><', vectorCrossProductFn)
 normpdf = PrefixFunction('normpdf', normalPdfFn)
 normcdf = PrefixFunction('normcdf', normalCdfFn)
 invnorm = PrefixFunction('invnorm', invNormalCdfFn)
+readFile = PrefixFunction('readFile', readFile)
+stringLines = PrefixFunction('lines', linesFn)
+stringWords = PrefixFunction('lines', wordsFn)
+stringSplit = PrefixFunction('split', splitFn)
 
 
 regex = {
@@ -462,7 +512,7 @@ regex = {
     r'\s*(\|\|)\s*': logicalOR,
     r'\s*(=)\s*': assignment,
     r'\s*(@)\s*': indexing,
-    r'(\$)\s*': tupLength,
+    r'(\$)\s*': length,
     r'(sinh)\s+': weakSinh,
     r'(cosh)\s+': weakCosh,
     r'(tanh)\s+': weakTanh,
@@ -499,6 +549,10 @@ regex = {
     r'(normpdf)(?![A-Za-z_])': normpdf,
     r'(normcdf)(?![A-Za-z_])': normcdf,
     r'(invnorm)(?![A-Za-z_])': invnorm,
+    r'(readFile)(?![A-Za-z_])': readFile,
+    r'(words)(?![A-Za-z_])': stringWords,
+    r'(lines)(?![A-Za-z_])': stringLines,
+    r'(split)(?![A-Za-z_])': stringSplit,
     r'(sqrt)(?![A-Za-z_])': sqrt,
     r'(ln)(?![A-Za-z_])': ln,
     r'(lg)(?![A-Za-z_])': lg,
@@ -519,7 +573,7 @@ power = {
     functionInvocation: (10.1, 99),  # why did I choose such a low precedence for this?
     # functionInvocation: (13, 99),
     factorial: (12, 12.1),
-    tupLength: (12, 12.1),
+    length: (12, 12.1),
     implicitMult: (11, 11),
     exponentiation: (11.1, 10.9),
     sqrt: (11.1, 10.9),
@@ -544,6 +598,10 @@ power = {
     normpdf: (11.1, 10.9),
     normcdf: (11.1, 10.9),
     invnorm: (11.1, 10.9),
+    readFile: (11.1, 10.9),
+    stringWords: (11.1, 10.9),
+    stringLines: (11.1, 10.9),
+    stringSplit: (11.1, 10.9),
     ln: (11.1, 10.9),
     lg: (11.1, 10.9),
     negative: (11.1, 10.9),
@@ -654,4 +712,8 @@ memory.Memory.topList = {
     'normcdf': normcdf,
     'normpdf': normpdf,
     'invnorm': invnorm,
+    'readFile': readFile,
+    'words': stringWords,
+    'lines': stringLines,
+    'split': stringSplit,
 }

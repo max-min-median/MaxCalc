@@ -51,7 +51,6 @@ repeat(ch, n) = n == 0 ? () : (ch:) <+> repeat(ch, n - 1)
 grid = n => ch => repeat(n)(repeat(n)(ch))
 rej(u, v) = v - proj(u, v)
 graph(f) = map(x => (x, f(x)))
-helper(ch, i = 0) = {{repeat(n) = helper(ch, i = 0) = i == n ? () : (ch:) <+> helper(ch, i + 1); n = 5}} i == n ? () : (ch:) <+> helper(ch, i + 1)
 divMod(n, d) = (n // d, n % d)
 sigma(f, l, u) = f(l) + (l < u ? sigma(f, l + 1, u) : 0)
 table = graph(f) = map(x => (x, f(x)))
@@ -78,7 +77,6 @@ digitsToNum(lst) = lst$ ? 10 * digitsToNum(lst /> 1) + (lst @ (lst$ - 1)) : 0
 lookAndSay(n, acc = (1:)) = acc$ >= n ? acc : lookAndSay(n, acc <+> (digitsToNum(LAS(digits(acc @ (acc$ - 1)))):))
 nQ_fits(k, arr, i = 0) = i == arr$ ? 1 : arr @ i == k || abs(arr @ i - k) == abs(arr$ - i) ? 0 : nQ_fits(k, arr, i + 1)
 nQueens(n) = map(map(nQ_makerow(n)))(nQ_raw(n))
-u(n) = 61 + 6(n - 1)
 confidenceInterval(alpha, mean, sd) = {z = invnorm((1 + alpha)/2); (mean - z * sd, mean + z * sd)}
 confidenceInterval_proportion(alpha, p, n) = confidenceInterval(alpha, p, sqrt(p(1 - p)/n))
 nQ_makerow(n) = h(i) = repeat(0, i) <+> (1:) <+> repeat(0, n - i - 1)
@@ -87,20 +85,28 @@ mod(a, n) = a % n
 feetInchToCm(f, in = 0) = 2.54(12f + in)
 cmToFeetInch(x) = {inches = x/2.54; divMod(inches, 12)}
 createCubic(a, b, c) = (1, -(a + b + c), a * b + b * c + c * a, -a * b * c)
-S(n) = 7/4 - 3/2(n + 1) - 1/2(n + 2)
 lcm(a, b) = a * b / gcd(a, b)
 hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
 gcd3(a, b, c) = gcd(a, gcd(b, c))
 lcm3(a, b, c) = lcm(a, lcm(b, c))
 hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
-f(x) = (lg x)/(lg 4) + 3/2 (lg 4 / lg x) - 2.5
 polyMult(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> polyMult(1 </ a, b)))
 polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1))
 all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
 any(predicate, lst) = lst$ ? predicate(lst @ 0) || any(predicate, 1 </ lst) : 0
 quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = a <= b ? c >= b ? b : c <= a ? a : c : c >= a ? a : c <= b ? b : c; quicksort(filter(x => x < lst @ piv)(lst)) <+> filter(x => x == lst @ piv)(lst) <+> quicksort(filter(x => x > lst @ piv)(lst)))
 greet(name, n = 1) = "Hello " * n + name
-ans = x => {{y = 0}} (x = x + 1; x)
+secondsToWDHMS(x) = (x // (3600 * 24 * 7), x // (3600 * 24) % 7, x // 3600 % 24, x // 60 % 60, x % 60)
+cubic(a, b, c, d) = (d0 = b^2 - 3 * a * c; d1 = 2b^3 - 9a * b * c + 27a^2 * d; S = ((d1 + sqrt(d1^2 - 4 d0^3))/2)^(1/3); rt(x) = -1/3a (b + x * S + (S == 0 ? 0 : d0/(x * S))); quicksort(map(rt)((1, e^i(2pi/3), e^i(-2pi/3)))))
+f(x, y, z) = xy(1 - z) + x(1 - y)z + (1 - x)yz + xyz
+g(x) = 1/2 - sqrt3 x + 3x^2
+completeSquare(a, b, c, prettyPrint = 1) = (t = (x, y, z) = (a, -b/2a, c - b^2/4a); prettyPrint ? (x == 1 ? "" : x) + (isInteger(x) ? "" : " ") + (y == 0 ? printPolynomial([1, 0, z]) : "(" + printPolynomial((1, -y)) + ")^2" + (z == 0 ? "" : printPolynomial([z:], 0))) : t)
+zip(xs, ys) = xs$ && ys$ ? [(xs @ 0, ys @ 0):] <+> zip(1 </ xs, 1 </ ys) : []
+reverse(xs) = xs$ ? reverse(1 </ xs) <+> [xs @ 0:] : []
+isInteger(x) = x // 1 == x
+printPolynomial(poly, isFirst = 1) = poly$ ? (p = poly$ - 1; x = poly @ 0; xs = 1 </ poly; x == 0 ? printPolynomial(xs, isFirst) : printPolyTerm(x, xs$, isFirst) + printPolynomial(xs, 0)) : isFirst ? "0" : ""
+printPolyTerm(coeff, power, isFirst = 1) = (sign = coeff < 0 ? "-" : "+"; signStr = isFirst ? coeff < 0 ? "-" : "" : " " + sign + " "; c = abs(coeff); cStr = c == 1 ? (power == 0 ? 1 : "") : c + (isInteger(coeff) || power == 0 ? "" : " "); term = power == 0 ? "" : "x" + (power > 1 ? "^" + power : ""); signStr + cStr + term)
+ans = "x^4 + 2x^3 - 5x^2 - 3/4"
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441

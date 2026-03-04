@@ -18,6 +18,8 @@ class String(Value):
     def disp(self, *args):
         return "\"" + self.string.replace("\\n", "\n") + "\""
 
+    def conj(self): return self
+
     def __add__(self, other):
         # if isinstance(other, (int, float)): other = RealNumber(other)
         return String(self.string + (other.string if isinstance(other, String) else str(other)))
