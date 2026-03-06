@@ -230,10 +230,14 @@ def lengthFn(tupOrString):
 
 def tupConcatFn(tup1, tup2):
     from tuples import Tuple
-    if not isinstance(tup1, Tuple) or not isinstance(tup2, Tuple):
-        raise EvaluationError("Concatenation '<+>' expects tuples. End 1-tuples with ':)', e.g. '(3:)'")
-    result = tup2.morphCopy()
-    result.tokens = tup1.tokens + tup2.tokens
+    from strings import String
+    if isinstance(tup1, Tuple) and isinstance(tup2, Tuple):
+        result = tup2.morphCopy()
+        result.tokens = tup1.tokens + tup2.tokens
+    elif isinstance(tup1, String) and isinstance(tup2, String):
+        return tup1 + tup2
+    else:
+        raise EvaluationError("Concatenation '<+>' expects tuples or strings. End 1-tuples with ':)', e.g. '(3:)'")
     return result
 
 def knifeFn(dir):

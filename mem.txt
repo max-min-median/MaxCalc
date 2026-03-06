@@ -27,7 +27,7 @@ integrate(f, a, b, dx = (b - a)/100) = dx/2 * (f(a) + 2 * integHelper(f, a + dx,
 gini(a, b, c) = {tot = a + b + c; (a(tot - a) + b(tot - b) + c(tot - c)) / tot^2}
 log(a, b) = ln(b)/ln(a)
 cpd(prin, I, t) = prin(1 + I)^t
-gcd(a, b) = a ? gcd(b % a, a) : b
+gcd(lst) = lst$ == 0 ? "gcd expects non-empty list" : (gcd2(a, b) = a ? gcd2(b % a, a) : b; h(lst) = (lst$ == 1 ? lst @ 0 : gcd2(lst @ 0, h(1 </ lst))); h(lst))
 summation(f, l, u) = l <= u ? f(l) + summation(f, l + 1, u) : 0
 binCoeff(a, b, n, r = 0) = r > n ? () : (nCr * a^(n - r) * b^r:) <+> binCoeff(a, b, n, r + 1)
 gym(a, b = 0, c = 0, d = 0, q = 0) = (45 + 2(45a + 25b + 10c + 5d + 2.5q)) lbToKg
@@ -85,13 +85,11 @@ mod(a, n) = a % n
 feetInchToCm(f, in = 0) = 2.54(12f + in)
 cmToFeetInch(x) = {inches = x/2.54; divMod(inches, 12)}
 createCubic(a, b, c) = (1, -(a + b + c), a * b + b * c + c * a, -a * b * c)
-lcm(a, b) = a * b / gcd(a, b)
+lcm(lst) = lst$ == 0 ? "lcm expects non-empty list" : (lcm2(a, b) = a * b / gcd((a, b)); h(lst) = (lst$ == 1 ? lst @ 0 : lcm2(lst @ 0, h(1 </ lst))); h(lst))
 hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
-gcd3(a, b, c) = gcd(a, gcd(b, c))
-lcm3(a, b, c) = lcm(a, lcm(b, c))
 hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
-polyMult(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> polyMult(1 </ a, b)))
-polyDiv(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = polyDiv(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1))
+polyMult(a, b, pretty = 1) = (h(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> h(1 </ a, b))); (pretty ? printPolynomial : id)(h(a, b)))
+polyDiv(a, b, pretty = 1) = (h(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = h(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1)); (q, r) = h(a, b); pretty ? printPolynomial(q) + " + (" + printPolynomial(r) + ")/(" + printPolynomial(b) + ")" : (q, r))
 all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
 any(predicate, lst) = lst$ ? predicate(lst @ 0) || any(predicate, 1 </ lst) : 0
 quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = a <= b ? c >= b ? b : c <= a ? a : c : c >= a ? a : c <= b ? b : c; quicksort(filter(x => x < lst @ piv)(lst)) <+> filter(x => x == lst @ piv)(lst) <+> quicksort(filter(x => x > lst @ piv)(lst)))
@@ -106,7 +104,8 @@ reverse(xs) = xs$ ? reverse(1 </ xs) <+> [xs @ 0:] : []
 isInteger(x) = x // 1 == x
 printPolynomial(poly, isFirst = 1) = poly$ ? (p = poly$ - 1; x = poly @ 0; xs = 1 </ poly; x == 0 ? printPolynomial(xs, isFirst) : printPolyTerm(x, xs$, isFirst) + printPolynomial(xs, 0)) : isFirst ? "0" : ""
 printPolyTerm(coeff, power, isFirst = 1) = (sign = coeff < 0 ? "-" : "+"; signStr = isFirst ? coeff < 0 ? "-" : "" : " " + sign + " "; c = abs(coeff); cStr = c == 1 ? (power == 0 ? 1 : "") : c + (isInteger(coeff) || power == 0 ? "" : " "); term = power == 0 ? "" : "x" + (power > 1 ? "^" + power : ""); signStr + cStr + term)
-ans = "x^4 + 2x^3 - 5x^2 - 3/4"
+id(x) = x
+ans = 24
 deg = 367659/21065309
 toDeg = 1204537366/21023143
 lbToKg = 200/441
