@@ -122,29 +122,14 @@ def sinFn(x):
         sum += dx
     return sum.fastContinuedFraction()
 
-def cosFn(x):
-    return sinFn(pi / two - x)
-
-def tanFn(x):
-    return sinFn(x) / cosFn(x)
-
-def secFn(x):
-    return one / cosFn(x)
-
-def cscFn(x):
-    return one / sinFn(x)
-
-def cotFn(x):
-    return one / tanFn(x)
-
-def sinhFn(x):
-    return ((ex := exp(x)) - one / ex) / two
-
-def coshFn(x):
-    return ((ex := exp(x)) + one / ex) / two
-
-def tanhFn(x):
-    return ((e2x := exp(two * x)) - one) / (e2x + one)
+def cosFn(x): return sinFn(pi / two - x)
+def tanFn(x): return sinFn(x) / cosFn(x)
+def secFn(x): return one / cosFn(x)
+def cscFn(x): return one / sinFn(x)
+def cotFn(x): return one / tanFn(x)
+def sinhFn(x): return ((ex := exp(x)) - one / ex) / two
+def coshFn(x): return ((ex := exp(x)) + one / ex) / two
+def tanhFn(x): return ((e2x := exp(two * x)) - one) / (e2x + one)
 
 def arcsinFn(x):
     if not isinstance(x, RealNumber): raise EvaluationError("Invalid argument to arcsin function")
@@ -241,7 +226,6 @@ def tupConcatFn(tup1, tup2):
     return result
 
 def knifeFn(dir):
-
     from tuples import Tuple
     from strings import String
 
@@ -307,6 +291,53 @@ def vectorCrossProductFn(L, R):
     tup.tokens = [L.tokens[1] * R.tokens[2] - R.tokens[1] * L.tokens[2], L.tokens[2] * R.tokens[0] - R.tokens[2] * L.tokens[0], L.tokens[0] * R.tokens[1] - R.tokens[0] * L.tokens[1]]
     return tup
 
+def binomPdfFn(L):
+    from tuples import Tuple
+    if not isinstance(L, Tuple) or len(L) not in (2, 3):
+        raise EvaluationError('Expected binompdf(n, p) or binompdf(n, p, x)')
+    if len(L) == 2:
+        n, p = L.tokens
+    else:
+        n, p, x = L.tokens
+        result = combinationFn(n, x)
+        p_pwr = int(x)
+        for _ in range(p_pwr): result *= p
+        q = one - p
+        for _ in range(int(n) - p_pwr): result *= q
+    return result
+
+def binomCdfFn(L):
+    from tuples import Tuple
+    if not isinstance(L, Tuple) or len(L) not in (3, 4):
+        raise EvaluationError('Expected binomcdf(n, p, x) or binomcdf(n, p, lower, upper)')
+    if len(L) == 3:
+        n, p, upper = L.tokens
+        lower = zero
+    else:
+        n, p, lower, upper = L.tokens
+    if lower > upper: return zero
+    if two * (upper - lower + one) > n:
+        tup = L.morphCopy()
+        tup.tokens = [n, p, zero, lower - one]
+        result = one - binomCdfFn(tup)
+        tup.tokens = [n, p, upper + one, n]
+        result -= binomCdfFn(tup)
+    else:
+        tup = L.morphCopy()
+        tup.tokens = [n, p, lower]
+        term = binomPdfFn(tup)
+        result = zero
+        p_over_one_minus_p = p / (one - p)
+        k = lower
+
+        for _ in range(int(upper) - int(lower) + 1):
+            result += term
+            term *= (n - k) / (k + one) * p_over_one_minus_p
+            k += one
+
+    return result
+
+
 def normalPdfFn(L):
     from tuples import Tuple
     if isinstance(L, Tuple):
@@ -331,7 +362,6 @@ def normalCdfFn(L):
     x1, x2 = (a - mu) / sigma, (b - mu) / sigma
     return RealNumber((erf(x2 / sqrt2) - erf(x1 / sqrt2)) / 2)
 
-
 def invErf(x):  # returns a such that erf(a) = x
     from math import erf
     L, R = -4, 4
@@ -342,7 +372,6 @@ def invErf(x):  # returns a such that erf(a) = x
         else: return M
     return (L + R) / 2
 
-
 def invNormalCdfFn(L):
     from tuples import Tuple
     if isinstance(L, Tuple):
@@ -352,7 +381,6 @@ def invNormalCdfFn(L):
         mu, sigma = zero, one
     return mu + sigma * sqrt2 * RealNumber(invErf(two * L - one))
 
-
 def readFile(fileString):
     from strings import String
     if not isinstance(fileString, String): raise EvaluationError('Expects a single parameter "filename"')
@@ -360,7 +388,6 @@ def readFile(fileString):
     with open(filename) as f:
         res = f.read()
     return String(res.replace('\n', '\\n'))
-
 
 def wordsFn(string):
     from strings import String
@@ -377,7 +404,6 @@ def linesFn(string):
     tup = Tuple()
     tup.tokens = [*map(String, string.string.split('\\n'))]
     return tup
-
 
 def splitFn(tup):
     from strings import String
@@ -472,6 +498,8 @@ exponentiation = Infix('^', exponentiationFn)
 factorial = Postfix('!', factorialFn)
 vectorDotProduct = Infix('.', vectorDotProductFn)
 vectorCrossProduct = Infix('><', vectorCrossProductFn)
+binompdf = PrefixFunction('binompdf', binomPdfFn)
+binomcdf = PrefixFunction('binomcdf', binomCdfFn)
 normpdf = PrefixFunction('normpdf', normalPdfFn)
 normcdf = PrefixFunction('normcdf', normalCdfFn)
 invnorm = PrefixFunction('invnorm', invNormalCdfFn)
@@ -550,6 +578,8 @@ regex = {
     r'(arcsin|asin)(?![A-Za-z_])': arcsin,
     r'(arccos|acos)(?![A-Za-z_])': arccos,
     r'(arctan|atan)(?![A-Za-z_])': arctan,
+    r'(binompdf)(?![A-Za-z_])': binompdf,
+    r'(binomcdf)(?![A-Za-z_])': binomcdf,
     r'(normpdf)(?![A-Za-z_])': normpdf,
     r'(normcdf)(?![A-Za-z_])': normcdf,
     r'(invnorm)(?![A-Za-z_])': invnorm,
@@ -599,6 +629,8 @@ power = {
     arcsin: (11.1, 10.9),
     arccos: (11.1, 10.9),
     arctan: (11.1, 10.9),
+    binompdf: (11.1, 10.9),
+    binomcdf: (11.1, 10.9),
     normpdf: (11.1, 10.9),
     normcdf: (11.1, 10.9),
     invnorm: (11.1, 10.9),
@@ -713,6 +745,8 @@ memory.Memory.topList = {
     'sqrt': sqrt,
     'ln': ln,
     'lg': lg,
+    'binomcdf': binomcdf,
+    'binompdf': binompdf,
     'normcdf': normcdf,
     'normpdf': normpdf,
     'invnorm': invnorm,

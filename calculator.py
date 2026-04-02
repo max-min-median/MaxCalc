@@ -14,7 +14,6 @@ from UI import *
 #         self.mem = Memory()
 
 # TODO:
-# - u(r+1) = u(r) gives error
 # - funcComposition is broken for lambdas
 # - scrollable display window
 # - fix bug when input is too long

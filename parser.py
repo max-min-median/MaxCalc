@@ -85,7 +85,7 @@ def parse(s, offset=0, brackets='', parent=None):
                 addToken(N.RealNumber(m.groups()[0], fcf=True, epsilon=st.epsilon), m)
         elif checkOpRegex():
             continue
-        elif m := re.match(r'([A-Za-z](?:\w*(?:\d(?!(?:[0-9.]))|[A-Za-z_](?![A-Za-z])))?)', ss):  # Word token (might be a concatenation of vars & possible func at the end) 
+        elif m := re.match(r'([A-Za-z_](?:\w*(?:\d(?![0-9.])|[A-Za-z_](?![A-Za-z])))?)', ss):  # Word token (might be a concatenation of vars & possible func at the end) 
             # if tokens[-1] is not None and tokens[-1] is not Op.assignment: raise ParseError(f'Cannot assign to invalid l-value (pos {startPos + pos}). Did you mean "==" instead?')
             addToken(WordToken(m.group()), m)
         else:

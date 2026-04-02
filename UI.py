@@ -361,7 +361,7 @@ class UI:
                 self.pos += 1
             elif 32 <= key <= 126:  # usual alphanumeric + symbols
                 # quickExponents
-                if 48 <= key <= 57 and self.st.get("quick_exponents") and self.pos > 0 and (text[self.pos - 1] in ')]}' or self.wordR == self.pos and not isinstance(self.mem.get(self.currWord), (Operator)) and text[self.pos - 1] not in 'PC' and (text[self.pos - 1] not in 'Ee' or self.pos > 1 and not text[self.pos - 2].isdigit())):
+                if 48 <= key <= 57 and self.st.get("quick_exponents") and self.pos > 0 and (text[self.pos - 1] in ')]}' or self.wordR == self.pos and not isinstance(self.mem.get(self.currWord), Operator) and text[self.pos - 1] not in 'PC_' and (text[self.pos - 1] not in 'Ee' or self.pos > 1 and not text[self.pos - 2].isdigit())):
                     typed = ['^', chr(key)]
                 else:
                     typed = [chr(key)]

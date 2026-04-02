@@ -1,6 +1,4 @@
 area(a, b, c) = a * b * sin c / 2
-binomcdf(n, p, a, b = -1) = b == -1 ? binomcdf(n, p, 0, a) : binompdf(n, p, a) + ((b > a) && binomcdf(n, p, a + 1, b))
-binompdf(n, p, x = -1) = x == -1 ? map(x => binompdf(n, p, x))(range(0, n + 1)) : nCx p^x (1 - p)^(n - x)
 collatz(n) = n > 1 ? 1 + (n % 2 ? collatz(3n + 1) : collatz(n/2)) : 0
 cosAngle(a, b, c) = acos((b^2 + c^2 - a^2) / (2 * b * c))
 cosRule(a, b, angle) = sqrt(a^2 + b^2 - 2 * a * b cos angle)
@@ -13,8 +11,6 @@ quad(a, b, c) = {sqrtD = sqrt(b^2 - 4ac); ((-b - sqrtD)/2a, (-b + sqrtD)/2a)}
 simul(a, b, c, d, e, f) = ((bf - ce)/(bd - ae), (cd - af)/(bd - ae))
 fib(n, a = 1, b = 0) = n == 0 ? b : fib(n - 1, b, a + b)
 luhn(n, q = 1) = {d = n % 10; n ? (q ? d : 2d > 9 ? 2d - 9 : 2d) + luhn(n // 10, 1 - q) : 0}
-ceil(n) = n // 1 + (n % 1 > 0)
-floor(n) = n // 1
 parseBin(n, acc = 0, base = 1) = n ? parseBin(n // 10, acc + base * (n % 10), base * 2) : acc
 bin(n, bits = 32) = binHelper(n + (n < 0) * 2^bits, bits - 1, 0)
 binHelper(n, p, res) = {c = n // 2^p; p ? binHelper(n - c * 2^p, p - 1, 10res + c) : 10res + c}
@@ -86,8 +82,6 @@ feetInchToCm(f, in = 0) = 2.54(12f + in)
 cmToFeetInch(x) = {inches = x/2.54; divMod(inches, 12)}
 createCubic(a, b, c) = (1, -(a + b + c), a * b + b * c + c * a, -a * b * c)
 lcm(lst) = lst$ == 0 ? "lcm expects non-empty list" : (lcm2(a, b) = a * b / gcd((a, b)); h(lst) = (lst$ == 1 ? lst @ 0 : lcm2(lst @ 0, h(1 </ lst))); h(lst))
-hcfAndLcm(a, b) = (gcd(a, b), lcm(a, b))
-hcfAndLcm3(a, b, c) = (gcd3(a, b, c), lcm3(a, b, c))
 polyMult(a, b, pretty = 1) = (h(a, b) = a$ == 0 || b$ == 0 ? () : (curr = (a @ 0 * b <+> repeat(0, a$ - 1)); a$ == 1 ? curr : curr + ((0:) <+> h(1 </ a, b))); (pretty ? printPolynomial : id)(h(a, b)))
 polyDiv(a, b, pretty = 1) = (h(a, b) = a$ < b$ ? ((), a) : (q = a @ 0 / b @ 0; rest = h(1 </ (a - (q * b <+> repeat(0, a$ - b$))), b); ((q:) <+> rest @ 0, rest @ 1)); (q, r) = h(a, b); pretty ? printPolynomial(q) + " + (" + printPolynomial(r) + ")/(" + printPolynomial(b) + ")" : (q, r))
 all(predicate, lst) = lst$ ? predicate(lst @ 0) && all(predicate, 1 </ lst) : 1
@@ -96,8 +90,7 @@ quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = 
 greet(name, n = 1) = "Hello " * n + name
 secondsToWDHMS(x) = (x // (3600 * 24 * 7), x // (3600 * 24) % 7, x // 3600 % 24, x // 60 % 60, x % 60)
 cubic(a, b, c, d) = (d0 = b^2 - 3 * a * c; d1 = 2b^3 - 9a * b * c + 27a^2 * d; S = ((d1 + sqrt(d1^2 - 4 d0^3))/2)^(1/3); rt(x) = -1/3a (b + x * S + (S == 0 ? 0 : d0/(x * S))); quicksort(map(rt)((1, e^i(2pi/3), e^i(-2pi/3)))))
-f(x, y, z) = xy(1 - z) + x(1 - y)z + (1 - x)yz + xyz
-g(x) = 1/2 - sqrt3 x + 3x^2
+g(x) = 1 - 1/(1 - x)
 completeSquare(a, b, c, prettyPrint = 1) = (t = (x, y, z) = (a, -b/2a, c - b^2/4a); prettyPrint ? (x == 1 ? "" : x) + (isInteger(x) ? "" : " ") + (y == 0 ? printPolynomial([1, 0, z]) : "(" + printPolynomial((1, -y)) + ")^2" + (z == 0 ? "" : printPolynomial([z:], 0))) : t)
 zip(xs, ys) = xs$ && ys$ ? [(xs @ 0, ys @ 0):] <+> zip(1 </ xs, 1 </ ys) : []
 reverse(xs) = xs$ ? reverse(1 </ xs) <+> [xs @ 0:] : []
@@ -105,8 +98,16 @@ isInteger(x) = x // 1 == x
 printPolynomial(poly, isFirst = 1) = poly$ ? (p = poly$ - 1; x = poly @ 0; xs = 1 </ poly; x == 0 ? printPolynomial(xs, isFirst) : printPolyTerm(x, xs$, isFirst) + printPolynomial(xs, 0)) : isFirst ? "0" : ""
 printPolyTerm(coeff, power, isFirst = 1) = (sign = coeff < 0 ? "-" : "+"; signStr = isFirst ? coeff < 0 ? "-" : "" : " " + sign + " "; c = abs(coeff); cStr = c == 1 ? (power == 0 ? 1 : "") : c + (isInteger(coeff) || power == 0 ? "" : " "); term = power == 0 ? "" : "x" + (power > 1 ? "^" + power : ""); signStr + cStr + term)
 id(x) = x
-ans = 24
-deg = 367659/21065309
+f(x) = (3^(x + 2), 9^x + 10)
+hcf = gcd(lst) = lst$ == 0 ? "gcd expects non-empty list" : (gcd2(a, b) = a ? gcd2(b % a, a) : b; h(lst) = (lst$ == 1 ? lst @ 0 : gcd2(lst @ 0, h(1 </ lst))); h(lst))
+hcfAndLcm(lst) = (hcf(lst), lcm(lst))
+h = 754786805927531/965112091323255
+ans = 17865386296585/22511211979446
+deg = 17379824634461/995790600232114
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
+x = 1092589126318084/841464302657283
+b = -1
+a = 10
+y = 6480589597597463/841464302657283
