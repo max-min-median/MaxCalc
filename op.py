@@ -297,6 +297,9 @@ def binomPdfFn(L):
         raise EvaluationError('Expected binompdf(n, p) or binompdf(n, p, x)')
     if len(L) == 2:
         n, p = L.tokens
+        tup = L.morphCopy()
+        tup.tokens += [zero, n]
+        return binomCdfFn(tup, makeList=True)
     else:
         n, p, x = L.tokens
         result = combinationFn(n, x)
@@ -304,9 +307,9 @@ def binomPdfFn(L):
         for _ in range(p_pwr): result *= p
         q = one - p
         for _ in range(int(n) - p_pwr): result *= q
-    return result
+        return result
 
-def binomCdfFn(L):
+def binomCdfFn(L, makeList=False):
     from tuples import Tuple
     if not isinstance(L, Tuple) or len(L) not in (3, 4):
         raise EvaluationError('Expected binomcdf(n, p, x) or binomcdf(n, p, lower, upper)')
@@ -316,27 +319,31 @@ def binomCdfFn(L):
     else:
         n, p, lower, upper = L.tokens
     if lower > upper: return zero
-    if two * (upper - lower + one) > n:
+
+    if not makeList and two * (upper - lower + one) > n:
         tup = L.morphCopy()
         tup.tokens = [n, p, zero, lower - one]
         result = one - binomCdfFn(tup)
         tup.tokens = [n, p, upper + one, n]
         result -= binomCdfFn(tup)
+        return result
     else:
         tup = L.morphCopy()
         tup.tokens = [n, p, lower]
         term = binomPdfFn(tup)
-        result = zero
+        result = [] if makeList else zero
         p_over_one_minus_p = p / (one - p)
         k = lower
 
         for _ in range(int(upper) - int(lower) + 1):
-            result += term
+            result += [term] if makeList else term
             term *= (n - k) / (k + one) * p_over_one_minus_p
             k += one
 
+        if makeList:
+            tup.tokens = result
+            result = tup
     return result
-
 
 def normalPdfFn(L):
     from tuples import Tuple
