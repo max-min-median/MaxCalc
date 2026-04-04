@@ -3,9 +3,9 @@ import os
 import platform
 import subprocess
 from trie import Trie
-from functions import Function
 from operators import Operator
 from collections import deque, defaultdict
+from itertools import islice
 import json
 
 system = platform.system()
@@ -106,7 +106,6 @@ class UI:
         if UI.pairIdx is None:
             UI.pairIdx = 0
             UI.pairCodeToIdx = {}
-            # TODO - revamp colors: UI.colors[]
             UI["test"]["me"] = 'hello'
             fgs = {"YELLOW": 226, "GREY": 241, "GREEN": 10, "LIGHTBLUE": 69, "DARK_PURPLE": 129, "BRIGHT_ORANGE": 202, "DIM_ORANGE": 208,
                    "BRIGHT_GREEN": 46, "BRIGHT_RED": 196, "WHITE": -1, "BRIGHT_WHITE": 15, "BRIGHT_PINK": 165, "BRIGHT_PURPLE": 201, "BRIGHT_CYAN": 11}
@@ -116,20 +115,19 @@ class UI:
                     UI[fg][bg] = UI.makeColorPair(fg_num, bg_num)
 
             UI["BLACK"]["BRIGHT_GREEN"] = UI.makeColorPair(0, 10)  # for highlighted bracket pairs
-
             UI.bracketColors = ["BRIGHT_GREEN", "YELLOW", "BRIGHT_CYAN", "BRIGHT_PINK"]
-
-            # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
             UI.pairIdxToCode = {v: k for k, v in UI.pairCodeToIdx.items()}
 
         # self.mem = memory
         self.statusDuration = 0
         # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
-        self.prompt = (("♦", UI["BRIGHT_ORANGE"]["BLACK"]), (">", UI["DIM_ORANGE"]["BLACK"]), (" ", ))
+        self.prompt = (("♦", UI["BRIGHT_ORANGE"]["BLACK"]), (">", UI["DIM_ORANGE"]["BLACK"]), (" ",))
+        self.overflowSymbols = (("<", UI["BRIGHT_GREEN"]["BLACK"]), (">", UI["BRIGHT_GREEN"]["BLACK"]))
         self.text = {"display": [], "status": [[]], "input": []}
         self.loadHistory()
         self.selectionAnchor = None
-        self.pos = 0
+        self.pos = 0     # where the cursor is relative to the front of self.text["input"]
+        self.offset = 0  # which index the input starts displaying from.
         self.setupWindows()
         if "status" in self.subwins:
             self.addText("status", ("Hello :) Type 'help' for a quick guide!", UI["GREEN"]["BLACK"]))
@@ -199,6 +197,8 @@ class UI:
         self.subwins["input"].leaveok(True)
         self.subwins["input"].scrollok(True)
         self.redraw("display", lastLine = len(self.text["display"]) - 1)
+        self.offset = 0
+        self.inputWinSize = self.subwins["input"].getmaxyx()
         self.redraw("input")
         self.redraw("status")
         return self.subwins
@@ -483,37 +483,49 @@ class UI:
 
         selectL, selectR = sorted([self.selectionAnchor, self.pos]) if self.selectionAnchor is not None else (len(text), 0)
         self.text["input"].clear()
-        self.addText("input", *self.prompt)
 
-        # TODO - call pairBrackets, print brackets paired.
+        totalCharsRemaining = self.inputWinSize[0] * self.inputWinSize[1] - len(self.prompt) - 1
+        if self.pos < self.offset: self.offset = self.pos
+        elif self.pos - self.offset > totalCharsRemaining: self.offset = self.pos - totalCharsRemaining
+        elif len(text) - self.offset < totalCharsRemaining: self.offset = max(0, len(text) - totalCharsRemaining)
+
+        # text overflows to the left if self.offset > 0
+        self.addText("input", *(self.prompt if self.offset == 0 else self.prompt[:-1] + self.overflowSymbols[:1]))
+
         bracketColors, highlight = self.pairBrackets(text)
 
-        for i, ch in enumerate(text + [""]):
+        for i, ch in islice(enumerate(text + [""]), self.offset, None):
 
             if i in highlight:
                 fg, bg = "BLACK", "BRIGHT_GREEN"
             else:
                 fg = (
-                        bracketColors[i] if i in bracketColors else
-                        "YELLOW"         if self.wordL <= i < self.wordR else
-                        "WHITE"
+                    bracketColors[i] if i in bracketColors else
+                    "YELLOW"         if self.wordL <= i < self.wordR else
+                    "WHITE"
                 )
-
                 bg = "BLUE" if selectL <= i < selectR else "BLACK"
             
             if i == self.wordR and nearestWords:
-                if tabbed is False: self.addText("input", (nearestWords[0][len(self.currWord):], UI["GREY"]["BLUE"] if selectL <= self.wordR < selectR else UI["GREY"]["BLACK"]), startNewLine=False)
-                else: self.addText("input", (nearestWords[tabbed][len(self.currWord):], UI["YELLOW"]["BLACK"]), startNewLine=False)
+                if tabbed is False:
+                    totalCharsRemaining -= len(nearestWords[0][len(self.currWord):])
+                    self.addText("input", (nearestWords[0][len(self.currWord):], UI["GREY"]["BLUE"] if selectL <= self.wordR < selectR else UI["GREY"]["BLACK"]), startNewLine=False)
+                else:
+                    totalCharsRemaining -= len(nearestWords[tabbed][len(self.currWord):])
+                    self.addText("input", (nearestWords[tabbed][len(self.currWord):], UI["YELLOW"]["BLACK"]), startNewLine=False)
             
             self.addText("input", (ch, UI[fg][bg]), startNewLine=False)
 
-        self.subwins["input"].move(*divmod(len(self.prompt) + (self.pos if tabbed is False else self.wordL + len(nearestWords[tabbed])), self.wd - 2))
-        self.subwins["input"].cursyncup()
+        cursorPos = divmod(len(self.prompt) + (self.pos if tabbed is False else self.wordL + len(nearestWords[tabbed])) - self.offset, self.wd - 2)
+        inputWin = self.subwins["input"]
+        inputWin.move(*cursorPos if cursorPos[0] < self.inputWinSize[0] else (self.inputWinSize[0] - 1, self.inputWinSize[1] - 1))
+        inputWin.cursyncup()
         self.redraw("input")
         self.doupdate()
 
 
-    def addText(self, windowName, *strAndAttrTuples, startNewLine=True):  # adds text to self.text. Does not redraw window.
+    def addText(self, windowName, *strAndAttrTuples, startNewLine=True):
+        # adds text to self.text. Does not redraw window.
         if startNewLine:
             self.text[windowName].append([])
             if windowName == "display":
@@ -524,6 +536,7 @@ class UI:
             self.displayHistory[-1] += [tup if len(tup) == 1 else (tup[0], UI.pairCodeToIdx[tup[1]]) for tup in strAndAttrTuples]
             self.displayLineLength[-1] = sum(len(x[0]) for x in self.text[windowName][-1])
         return self
+
 
     def redraw(self, windowName, lastLine=None):  # does not call doupdate
         window, text = self.subwins[windowName], self.text[windowName]
@@ -553,11 +566,12 @@ class UI:
                     # if pad.getyx()[0] >= ht: break
                     if pad.getyx()[0] >= (totalLines if windowName == "display" else ht): break
 
-
         wy, wx = window.getbegyx()
         py, px = pad.getyx()
         if windowName == "display": pRow = py - (px == 0) - ht + 1
         else: pRow = 0
+        if windowName == "input" and pad.getyx()[0] >= self.inputWinSize[0]:
+            pad.insstr(self.inputWinSize[0] - 1, self.inputWinSize[1] - 1, *self.overflowSymbols[1])
         pad.noutrefresh(pRow, 0, wy, wx, wy + ht - 1, wx + wd - 1)
         # pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol;
         # the p arguments refer to the upper left corner of the pad region to be displayed

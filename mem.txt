@@ -48,7 +48,6 @@ grid = n => ch => repeat(n)(repeat(n)(ch))
 rej(u, v) = v - proj(u, v)
 graph(f) = map(x => (x, f(x)))
 divMod(n, d) = (n // d, n % d)
-sigma(f, l, u) = f(l) + (l < u ? sigma(f, l + 1, u) : 0)
 table = graph(f) = map(x => (x, f(x)))
 angle(x) = polar(x) @ 1
 geopdf(p, x) = (1 - p)^(x - 1) * p
@@ -101,8 +100,8 @@ id(x) = x
 f(x) = (3^(x + 2), 9^x + 10)
 hcf = gcd(lst) = lst$ == 0 ? "gcd expects non-empty list" : (gcd2(a, b) = a ? gcd2(b % a, a) : b; h(lst) = (lst$ == 1 ? lst @ 0 : gcd2(lst @ 0, h(1 </ lst))); h(lst))
 hcfAndLcm(lst) = (hcf(lst), lcm(lst))
+ans = summation(f, l, u) = l <= u ? f(l) + summation(f, l + 1, u) : 0
 h = 754786805927531/965112091323255
-ans = 17865386296585/22511211979446
 deg = 17379824634461/995790600232114
 toDeg = 1204537366/21023143
 lbToKg = 200/441
@@ -111,3 +110,5 @@ x = 1092589126318084/841464302657283
 b = -1
 a = 10
 y = 6480589597597463/841464302657283
+p = 7/10
+q = 3/10
