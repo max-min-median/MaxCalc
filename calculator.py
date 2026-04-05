@@ -94,16 +94,16 @@ def main():
                 else:
                     try:
                         expr = parse(inp)
+                        if expr is None: continue
+                        mainMem.writeLock = True
+                        val = expr.value(mainMem)
+                        if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
+                        ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI["BRIGHT_GREEN"]["BLACK"]))
+                        mainMem.writeLock = False
+                        mainMem.add('ans', val)
                     except ValueError as e:
                         if 'integer string conversion' in str(e): raise CalculatorError('Integer is too long to be displayed')
                         else: raise CalculatorError(str(e))
-                    if expr is None: continue
-                    mainMem.writeLock = True
-                    val = expr.value(mainMem)
-                    if isinstance(val, Number): val = val.fastContinuedFraction(epsilon=st.finalEpsilon)
-                    ui.addText("display", (val.disp(st.get('frac_max_length'), st.get('final_precision')), UI["BRIGHT_GREEN"]["BLACK"]))
-                    mainMem.writeLock = False
-                    mainMem.add('ans', val)
             except CalculatorError as e:
                 if len(e.args) > 1: ui.addText("display", (' ' * (len(ui.prompt) + (span := e.args[1])[0] - 1) + '↗' + '‾' * (span[1] - span[0]), UI["BRIGHT_RED"]["BLACK"]))
                 ui.addText("display", (f"{repr(e).split('(')[0]}: {e.args[0]}", UI["BRIGHT_RED"]["BLACK"]))
