@@ -92,7 +92,11 @@ def main():
                         ui.trie.insert(m.group(1))
                         ui.addText("display", (f'{m.group(1)}', UI["LIGHTBLUE"]["BLACK"]), (' = ', ), (f'{mainMem.get(m.group(1)).value()}', UI["LIGHTBLUE"]["BLACK"]))
                 else:
-                    expr = parse(inp)
+                    try:
+                        expr = parse(inp)
+                    except ValueError as e:
+                        if 'integer string conversion' in str(e): raise CalculatorError('Integer is too long to be displayed')
+                        else: raise CalculatorError(str(e))
                     if expr is None: continue
                     mainMem.writeLock = True
                     val = expr.value(mainMem)
