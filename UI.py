@@ -38,6 +38,10 @@ class UI:
             388: {"key": curses.KEY_HOME, "modifiers": {"shift"}},
             455: {"key": curses.KEY_END, "modifiers": {}},
             384: {"key": curses.KEY_END, "modifiers": {"shift"}},
+            465: {"key": 43, "modifiers": {}},  # numpad +
+            464: {"key": 45, "modifiers": {}},  # numpad -
+            463: {"key": 42, "modifiers": {}},  # numpad *
+            458: {"key": 47, "modifiers": {}},  # numpad /
            1001: {"key": curses.KEY_LEFT, "modifiers": {"ctrl", "shift"}},
         },
 
@@ -122,7 +126,7 @@ class UI:
         self.statusDuration = 0
         # (prompt := "♦> ")  # →⇨►▶▷<◇▶❯›♦»•∙▷◇❯➤❯♦>∙
         self.prompt = (("♦", UI["BRIGHT_ORANGE"]["BLACK"]), (">", UI["DIM_ORANGE"]["BLACK"]), (" ",))
-        self.overflowSymbols = (("<", UI["BRIGHT_GREEN"]["BLACK"]), (">", UI["BRIGHT_GREEN"]["BLACK"]))
+        self.overflowSymbols = (("<", UI["LIGHTBLUE"]["BLACK"]), (">", UI["LIGHTBLUE"]["BLACK"]))
         self.text = {"display": [], "status": [[]], "input": []}
         self.loadHistory()
         self.selectionAnchor = None
