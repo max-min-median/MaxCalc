@@ -9,7 +9,7 @@ from itertools import islice
 import json
 
 system = platform.system()
-calcSplash = "MaxCalc v3.7.0-beta by max_min_median"
+calcSplash = "MaxCalc v3.8.0 by max_min_median"
 
 DISPLAY_LINE_LIMIT = 150
 
