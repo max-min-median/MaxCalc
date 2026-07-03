@@ -320,7 +320,7 @@ def binomCdfFn(L, makeList=False):
         n, p, lower, upper = L.tokens
     if lower > upper: return zero
 
-    if not makeList and two * (upper - lower + one) > n:
+    if not makeList and two * (upper - lower + one) > (n + one):
         tup = L.morphCopy()
         tup.tokens = [n, p, zero, lower - one]
         result = one - binomCdfFn(tup)
@@ -392,9 +392,9 @@ def readFile(fileString):
     from strings import String
     if not isinstance(fileString, String): raise EvaluationError('Expects a single parameter "filename"')
     filename = fileString.string
-    with open(filename) as f:
+    with open(filename, encoding="utf8") as f:
         res = f.read()
-    return String(res.replace('\n', '\\n'))
+    return String(res)
 
 def wordsFn(string):
     from strings import String
@@ -421,6 +421,11 @@ def splitFn(tup):
     result = Tuple()
     result.tokens = [*map(String, tup.tokens[0].string.split(tup.tokens[1].string))]
     return result
+
+def ordFn(char):
+    from strings import String
+    if not isinstance(char, String) or len(char) != 1: raise EvaluationError("ord: Expects a single character")
+    return RealNumber(ord(char.string[0]))
 
 
 assignment = Infix(' = ', assignmentFn)
@@ -514,7 +519,7 @@ readFile = PrefixFunction('readFile', readFile)
 stringLines = PrefixFunction('lines', linesFn)
 stringWords = PrefixFunction('lines', wordsFn)
 stringSplit = PrefixFunction('split', splitFn)
-
+stringOrd = PrefixFunction('ord', ordFn)
 
 regex = {
     r'\s*(<\/)\s*': leftKnife,
@@ -594,6 +599,7 @@ regex = {
     r'(words)(?![A-Za-z_])': stringWords,
     r'(lines)(?![A-Za-z_])': stringLines,
     r'(split)(?![A-Za-z_])': stringSplit,
+    r'(ord)(?![A-Za-z_])': stringOrd,
     r'(sqrt)(?![A-Za-z_])': sqrt,
     r'(ln)(?![A-Za-z_])': ln,
     r'(lg)(?![A-Za-z_])': lg,
@@ -645,6 +651,7 @@ power = {
     stringWords: (11.1, 10.9),
     stringLines: (11.1, 10.9),
     stringSplit: (11.1, 10.9),
+    stringOrd: (11.1, 10.9),
     ln: (11.1, 10.9),
     lg: (11.1, 10.9),
     negative: (11.1, 10.9),
@@ -761,4 +768,5 @@ memory.Memory.topList = {
     'words': stringWords,
     'lines': stringLines,
     'split': stringSplit,
+    'ord': ord,
 }

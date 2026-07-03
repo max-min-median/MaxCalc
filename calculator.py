@@ -6,6 +6,7 @@ from errors import *
 from parser import parse
 from number import *
 from pathlib import Path
+from functions import Function
 import sys, re
 from UI import *
 

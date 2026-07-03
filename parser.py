@@ -76,6 +76,27 @@ def parse(s, offset=0, brackets='', parent=None):
                     break
             expr.tokens.append(tup)
         elif ss[0] == "\"":  # string
+            # strStart = i
+            # i += 1
+            # builder = []
+            # while ss := s[i:]:
+            #     if ss[:2] == "\\n":
+            #         builder.append("\n")
+            #         i += 2
+            #     elif ss[:2] == "\\\"":
+            #         builder.append("\"")
+            #         i += 2
+            #     elif ss[:2] == "\\\\":
+            #         builder.append("\\")
+            #         i += 2
+            #     elif ss[0] == "\"":
+            #         i += 1
+            #         break
+            #     else:
+            #         builder.append(ss[0])
+            #         i += 1
+            # tokens.append(String(''.join(builder)))
+            # posList.append((strStart, i))
             m = re.match(r"(\"([^\"]*)\"?)", ss)
             addToken(String(m.groups()[1]), m)
         elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):  # Number. Cannot follow Number, spaceSeparator, or Var

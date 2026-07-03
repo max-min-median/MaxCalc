@@ -1,4 +1,4 @@
-area(a, b, c) = a * b * sin c / 2
+area(a, b, angle) = a * b * sin angle / 2
 collatz(n) = n > 1 ? 1 + (n % 2 ? collatz(3n + 1) : collatz(n/2)) : 0
 cosAngle(a, b, c) = acos((b^2 + c^2 - a^2) / (2 * b * c))
 cosRule(a, b, angle) = sqrt(a^2 + b^2 - 2 * a * b cos angle)
@@ -59,7 +59,6 @@ vecPlane3Points(p, q, r) = {n = (q - p)><(r - p); (n, p.n)}
 vecDistPointToLine(p, (a, d)) = norm((p - a)><d)/norm(d)
 vecDistPointToPlane(p, (n, d)) = abs((vecGetPointOnPlane((n, d)) - p).n)/norm(n)
 vecDistPlaneToPlane((n1, d1), (n2, d2)) = n1><n2 != (0, 0, 0) ? () : vecDistPointToPlane(vecGetPointOnPlane((n1, d1)), (n2, d2))
-hyperGeom = (a, b) => (x, y) => (aCx)(bCy) / ((a + b)C(x + y))
 vecPlaneFromParametric(a, p, q) = {n = p><q; (n, a.n)}
 sumAP(a, d, n) = n/2 (2a + (n - 1)d)
 radixToDec(radix) = h(n, acc = 0, base = 1) = n ? h(n // 10, acc + base * (n % 10), base * radix) : acc
@@ -89,7 +88,7 @@ quicksort(lst) = lst$ <= 1 ? lst : ((a, b, c) = (0, lst$ // 2, lst$ - 1); piv = 
 greet(name, n = 1) = "Hello " * n + name
 secondsToWDHMS(x) = (x // (3600 * 24 * 7), x // (3600 * 24) % 7, x // 3600 % 24, x // 60 % 60, x % 60)
 cubic(a, b, c, d) = (d0 = b^2 - 3 * a * c; d1 = 2b^3 - 9a * b * c + 27a^2 * d; S = ((d1 + sqrt(d1^2 - 4 d0^3))/2)^(1/3); rt(x) = -1/3a (b + x * S + (S == 0 ? 0 : d0/(x * S))); quicksort(map(rt)((1, e^i(2pi/3), e^i(-2pi/3)))))
-g(x) = 1 - 1/(1 - x)
+g(x) = 4 + 3x - x^2
 completeSquare(a, b, c, prettyPrint = 1) = (t = (x, y, z) = (a, -b/2a, c - b^2/4a); prettyPrint ? (x == 1 ? "" : x) + (isInteger(x) ? "" : " ") + (y == 0 ? printPolynomial([1, 0, z]) : "(" + printPolynomial((1, -y)) + ")^2" + (z == 0 ? "" : printPolynomial([z:], 0))) : t)
 zip(xs, ys) = xs$ && ys$ ? [(xs @ 0, ys @ 0):] <+> zip(1 </ xs, 1 </ ys) : []
 reverse(xs) = xs$ ? reverse(1 </ xs) <+> [xs @ 0:] : []
@@ -97,18 +96,29 @@ isInteger(x) = x // 1 == x
 printPolynomial(poly, isFirst = 1) = poly$ ? (p = poly$ - 1; x = poly @ 0; xs = 1 </ poly; x == 0 ? printPolynomial(xs, isFirst) : printPolyTerm(x, xs$, isFirst) + printPolynomial(xs, 0)) : isFirst ? "0" : ""
 printPolyTerm(coeff, power, isFirst = 1) = (sign = coeff < 0 ? "-" : "+"; signStr = isFirst ? coeff < 0 ? "-" : "" : " " + sign + " "; c = abs(coeff); cStr = c == 1 ? (power == 0 ? 1 : "") : c + (isInteger(coeff) || power == 0 ? "" : " "); term = power == 0 ? "" : "x" + (power > 1 ? "^" + power : ""); signStr + cStr + term)
 id(x) = x
-f(x) = (3^(x + 2), 9^x + 10)
+f(r) = 40r^2 + 8117r - 20668
 hcf = gcd(lst) = lst$ == 0 ? "gcd expects non-empty list" : (gcd2(a, b) = a ? gcd2(b % a, a) : b; h(lst) = (lst$ == 1 ? lst @ 0 : gcd2(lst @ 0, h(1 </ lst))); h(lst))
 hcfAndLcm(lst) = (hcf(lst), lcm(lst))
-ans = summation(f, l, u) = l <= u ? f(l) + summation(f, l + 1, u) : 0
-h = 754786805927531/965112091323255
-deg = 17379824634461/995790600232114
+reverseStr(str) = str$ ? reverseStr(1 </ str) + (str @ 0) : ""
+normSimul((p1, x1), (p2, x2)) = (sigma = (x2 - x1) / (invnorm(p2) - invnorm(p1)); (x1 - sigma * invnorm(p1), sigma))
+hyperGeomPdf = (a, b) => (x, y) => (aCx)(bCy) / ((a + b)C(x + y))
+hyperGeom(a, b, r, x = 0) = x > r ? [] : [hyperGeomPdf(a, b)(x, r - x):] <+> hyperGeom(a, b, r, x + 1)
+h(t) = -t^2 + 6t
+b(x) = binompdf(10, 0.882, x)
+ans = 311952797/18673614485
+deg = 89285273844/5115669363931
 toDeg = 1204537366/21023143
 lbToKg = 200/441
 delta = 1/10000000000
-x = 1092589126318084/841464302657283
-b = -1
-a = 10
-y = 6480589597597463/841464302657283
-p = 7/10
-q = 3/10
+x = 5184/625
+mu = 36996884251348497/3428005817842
+xs = [2, 5, 6, 7, 11]
+ys = [6, 10, 16, 20, 25]
+pred = (6, 27/2, 16, 37/2, 57/2)
+c = -9
+y = 22526049624551/8286870547680
+p = 6735517511/38380137062
+q = (-15, 8)
+s = 13972684975765/2843392433939
+v = (3, -11/2, -3/2)
+n = (-43/2, -15, 12)
