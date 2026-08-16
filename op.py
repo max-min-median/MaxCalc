@@ -427,6 +427,10 @@ def ordFn(char):
     if not isinstance(char, String) or len(char) != 1: raise EvaluationError("ord: Expects a single character")
     return RealNumber(ord(char.string[0]))
 
+def chrFn(n):
+    from strings import String
+    if not isinstance(n, RealNumber) or not n.isInt(): raise EvaluationError("chr: Expects an integer")
+    return String(chr(int(n)))
 
 assignment = Infix(' = ', assignmentFn)
 lambdaArrow = Infix(' => ', lambdaArrowFn)
@@ -519,6 +523,7 @@ readFile = PrefixFunction('readFile', readFile)
 stringLines = PrefixFunction('lines', linesFn)
 stringWords = PrefixFunction('lines', wordsFn)
 stringSplit = PrefixFunction('split', splitFn)
+stringChr = PrefixFunction('chr', chrFn)
 stringOrd = PrefixFunction('ord', ordFn)
 
 regex = {
@@ -600,6 +605,7 @@ regex = {
     r'(lines)(?![A-Za-z_])': stringLines,
     r'(split)(?![A-Za-z_])': stringSplit,
     r'(ord)(?![A-Za-z_])': stringOrd,
+    r'(chr)(?![A-Za-z_])': stringChr,
     r'(sqrt)(?![A-Za-z_])': sqrt,
     r'(ln)(?![A-Za-z_])': ln,
     r'(lg)(?![A-Za-z_])': lg,
@@ -652,6 +658,7 @@ power = {
     stringLines: (11.1, 10.9),
     stringSplit: (11.1, 10.9),
     stringOrd: (11.1, 10.9),
+    stringChr: (11.1, 10.9),
     ln: (11.1, 10.9),
     lg: (11.1, 10.9),
     negative: (11.1, 10.9),
@@ -769,4 +776,5 @@ memory.Memory.topList = {
     'lines': stringLines,
     'split': stringSplit,
     'ord': ord,
+    'chr': chr,
 }

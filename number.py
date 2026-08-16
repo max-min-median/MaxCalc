@@ -183,7 +183,7 @@ class RealNumber(Number):
         s = str(self)
         if len(s) <= fracMaxLength: return s + ' = ' + self.dec(dp=decimalPlaces)
         return self.dec(dp=decimalPlaces)
-    
+
     @staticmethod
     def fromScientificNotation(significand, exponent):  # params are strings
         inputStr = significand + 'E' + exponent
@@ -193,6 +193,27 @@ class RealNumber(Number):
         elif exponent < 0: num /= RealNumber(10 ** (-exponent), fcf=False)
         num.fromString = inputStr
         return num
+
+    @staticmethod
+    def fromBin(s):  # params are strings
+        def binIntToDec(ss):
+            num = 0
+            for ch in ss: num = num * 2 + int(ch)
+            return RealNumber(num)
+
+        if s[:2].upper() != "0B": raise ParseError("fromBin() received a string not prefixed with '0b'")
+        s_int, *s_frac = s[2:].split(".")
+        result = binIntToDec(s_int)
+        if s_frac: result += binIntToDec(s_frac[0]) / RealNumber(2 ** len(s_frac[0]))
+        return result
+
+    @staticmethod
+    def fromHex(s):  # params are strings
+        if s[:2].upper() != "0X": raise ParseError("fromHex() received a string not prefixed with '0x'")
+        num = 0
+        for ch in s[2:]: num = num * 16 + int(ch, 16)
+        return RealNumber(num)
+
 
 # 'Interning' some useful constants
 zero = RealNumber(0)

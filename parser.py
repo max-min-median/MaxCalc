@@ -99,6 +99,10 @@ def parse(s, offset=0, brackets='', parent=None):
             # posList.append((strStart, i))
             m = re.match(r"(\"([^\"]*)\"?)", ss)
             addToken(String(m.groups()[1]), m)
+        elif m := re.match(r'(0[Bb][01]+(?:\.[01]+)?)', ss):  # Number (binary literal). Cannot follow Number, spaceSeparator, or Var
+            addToken(N.RealNumber.fromBin(m.groups()[0]), m)
+        elif m := re.match(r'(0[Xx][0-9A-Fa-f]+)', ss):  # Number (binary literal). Cannot follow Number, spaceSeparator, or Var
+            addToken(N.RealNumber.fromHex(m.groups()[0]), m)
         elif m := re.match(r'(\d+(?:\.\d+)?|\.\d+)(?:[Ee](-?\d+))?', ss):  # Number. Cannot follow Number, spaceSeparator, or Var
             if (exponent := m.groups()[1]) is not None:
                 addToken(N.RealNumber.fromScientificNotation(m.groups()[0], m.groups()[1]), m)
